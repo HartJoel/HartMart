@@ -104,16 +104,41 @@ class AuthService {
         };
       }
 
-       // Generate password reset token (valid for 1 hour)
+      // Generate password reset token (valid for 1 hour)
       const passwordResetToken = crypto.randomBytes(32).toString("hex");
       const passwordResetTokenExpires = new Date(Date.now() + 60 * 60 * 1000);
 
-      AuthRepository.forgetPassword(user, passwordResetToken, passwordResetTokenExpires)
+      AuthRepository.forgetPassword(
+        user,
+        passwordResetToken,
+        passwordResetTokenExpires,
+      );
 
       return {
         success: true,
         message: "If an account exists, password reset email will be sent",
         passwordResetToken,
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  static async resetPassword(token, newPassword) {
+    try {
+      const user = await AuthRepository.findPasswordResetToken(token);
+
+      if (!user) {
+        throw new Error("Invalid or expired reset token");
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      AuthRepository.updatePassword(user, hashedPassword);
+
+      return {
+        success: true,
+        message: "Password reset successfully. Please login with new password.",
       };
     } catch (error) {
       throw error;

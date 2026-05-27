@@ -48,6 +48,28 @@ class AuthRepository {
       },
     });
   }
+
+  static async findPasswordResetToken(token) {
+    return prisma.user.findFirst({
+      where: {
+        passwordResetToken: token,
+        passwordResetExpires: {
+          gt: new Date(), // Token not expired
+        },
+      },
+    });
+  }
+
+  static async updatePassword(user, hashedPassword) {
+    return prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        passwordResetToken: null,
+        passwordResetExpires: null,
+      },
+    });
+  }
 }
 
 export default AuthRepository;

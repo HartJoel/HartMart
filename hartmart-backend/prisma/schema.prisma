@@ -32,9 +32,7 @@ model User {
   id                    String   @id @default(cuid())
   email                 String   @unique @db.VarChar(255)
   password              String   @db.VarChar(255)
-  firstName             String   @db.VarChar(100)
-  lastName              String   @db.VarChar(100)
-  phoneNumber           String?  @db.VarChar(20)
+  name                  String   @db.VarChar(100)
   avatar                String?  @db.Text             // Cloudinary URL
   role                  UserRole @default(CUSTOMER)
   
@@ -42,6 +40,7 @@ model User {
   emailVerified         Boolean  @default(false)
   emailVerifiedAt       DateTime?
   emailVerificationToken String?  @unique
+  emailVerificationTokenExpires    DateTime?
   passwordResetToken    String?  @unique
   passwordResetExpires  DateTime?
   twoFactorSecret       String?  @db.VarChar(255)

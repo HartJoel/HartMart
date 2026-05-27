@@ -2,10 +2,19 @@ import express from "express";
 import { config } from "dotenv";
 import { connectDB, disconnectDB } from "./config/db.js";
 
+// Import Routes
+import authRoutes from "./v1/routes/authRoutes.js";
+
 config();
 connectDB();
 
 const app = express();
+
+// Body parsing middlwares
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.use("/v1/auth", authRoutes);
 
 // Handle unhandled promise rejections (e.g., database connection errors)
 process.on("unhandledRejection", (err) => {

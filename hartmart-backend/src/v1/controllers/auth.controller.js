@@ -26,4 +26,31 @@ const register = async (req, res) => {
   }
 };
 
-export default register;
+const verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        error: "Verification token is required",
+      });
+    }
+    const result = await AuthService.verifyEmail(token);
+
+    return res.status(200).json({
+      success: true,
+      message: result.message,
+      data: {
+        user: result.user,
+      },
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+export {register, verifyEmail};

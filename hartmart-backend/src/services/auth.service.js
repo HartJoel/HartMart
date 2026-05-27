@@ -36,6 +36,31 @@ class AuthService {
       throw error;
     }
   }
+
+  static async verifyEmail(token) {
+    try {
+      const user = await AuthRepository.findEmailToken(token);
+
+      if (!user) {
+        throw new Error("Invalid or expired verification token");
+      }
+
+      const updatedUser = await AuthRepository.verifyEmail(user);
+
+      return {
+        success: true,
+        message: "Email verified successfully",
+        user: {
+          id: updatedUser.id,
+          name: updatedUser.name,
+          email: updatedUser.email,
+          emailVerified: updatedUser.emailVerified,
+        },
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 export default AuthService;

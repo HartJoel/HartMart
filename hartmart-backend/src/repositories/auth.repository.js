@@ -12,6 +12,28 @@ class AuthRepository {
       data,
     });
   }
+
+  static async findEmailToken(token) {
+    return prisma.user.findFirst({
+      where: {
+        emailVerificationToken: token,
+        emailVerificationTokenExpires: {
+          gt: new Date(), // Token not expired
+        },
+      },
+    });
+  }
+
+  static async verifyEmail(user) {
+    return prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerified: true,
+        emailVerificationToken: null,
+        emailVerificationTokenExpires: null,
+      },
+    });
+  }
 }
 
 export default AuthRepository;

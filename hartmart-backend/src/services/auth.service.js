@@ -92,6 +92,33 @@ class AuthService {
       throw error;
     }
   }
+
+  static async forgotPassword(email) {
+    try {
+      const user = await AuthRepository.findUserByEmail(email);
+
+      if (!user) {
+        return {
+          success: true,
+          message: "If an account exists, password reset email will be sent",
+        };
+      }
+
+       // Generate password reset token (valid for 1 hour)
+      const passwordResetToken = crypto.randomBytes(32).toString("hex");
+      const passwordResetTokenExpires = new Date(Date.now() + 60 * 60 * 1000);
+
+      AuthRepository.forgetPassword(user, passwordResetToken, passwordResetTokenExpires)
+
+      return {
+        success: true,
+        message: "If an account exists, password reset email will be sent",
+        passwordResetToken,
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 export default AuthService;

@@ -34,6 +34,20 @@ class AuthRepository {
       },
     });
   }
+
+  static async forgetPassword(
+    user,
+    passwordResetToken,
+    passwordResetTokenExpires,
+  ) {
+    return prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordResetToken: passwordResetToken,
+        passwordResetExpires: passwordResetTokenExpires,
+      },
+    });
+  }
 }
 
 export default AuthRepository;

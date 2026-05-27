@@ -1,4 +1,5 @@
 import AuthService from "../../services/auth.service.js";
+import { setAuthCookies } from "../../utils/generate.token.js";
 
 const register = async (req, res) => {
   try {
@@ -55,7 +56,13 @@ const verifyEmail = async (req, res) => {
 
 const login = async (req, res) => {
   try {
-    const { user } = await AuthService.login(req.body);
+    const { user, accessToken, refreshToken } = await AuthService.login(
+      req.body,
+    );
+
+    // Set cookies in response
+    setAuthCookies
+    (res, accessToken, refreshToken);
 
     // Return user data (consistent with register response)
     return res.status(200).json({
@@ -68,6 +75,7 @@ const login = async (req, res) => {
           email: user.email,
           role: user.role,
         },
+        accessToken,
       },
     });
   } catch (error) {

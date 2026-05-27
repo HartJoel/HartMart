@@ -2,6 +2,10 @@ import { prisma } from "../config/db.js";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import AuthRepository from "../repositories/auth.repository.js";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../utils/generate.token.js";
 
 class AuthService {
   // REGISTER USER
@@ -83,10 +87,18 @@ class AuthService {
         throw new Error("Invalid email or password");
       }
 
+      // Generate tokens
+      const accessToken = generateAccessToken(user.id, user.role);
+      const refreshToken = generateRefreshToken(user.id);
+
+      AuthRepository.createRefreshToken(refreshToken, user);
+
       delete user.password;
 
       return {
         user,
+        accessToken,
+        refreshToken,
       };
     } catch (error) {
       throw error;

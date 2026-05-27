@@ -3,7 +3,7 @@ import { config } from "dotenv";
 import { connectDB, disconnectDB } from "./config/db.js";
 
 // Import Routes
-import authRoutes from "./v1/routes/authRoutes.js";
+import authRoutes from "./v1/routes/auth.routes.js";
 
 config();
 connectDB();

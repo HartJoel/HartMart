@@ -1,0 +1,64 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  VENDOR
+  CUSTOMER
+}
+
+// ============================================================================
+// CORE USER DOMAIN
+// ============================================================================
+
+model User {
+  id                    String   @id @default(cuid())
+  email                 String   @unique @db.VarChar(255)
+  password              String   @db.VarChar(255)
+  firstName             String   @db.VarChar(100)
+  lastName              String   @db.VarChar(100)
+  phoneNumber           String?  @db.VarChar(20)
+  avatar                String?  @db.Text             // Cloudinary URL
+  role                  UserRole @default(CUSTOMER)
+  
+  // Security
+  emailVerified         Boolean  @default(false)
+  emailVerifiedAt       DateTime?
+  emailVerificationToken String?  @unique
+  passwordResetToken    String?  @unique
+  passwordResetExpires  DateTime?
+  twoFactorSecret       String?  @db.VarChar(255)
+  twoFactorEnabled      Boolean  @default(false)
+  
+  // Account status
+  status                String   @default("active") @db.VarChar(50)
+  lastLoginAt           DateTime?
+  lastLoginIp           String?  @db.VarChar(50)
+  loginAttempts         Int      @default(0)
+  lockoutUntil          DateTime?
+  
+  
+  // Timestamps
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  deletedAt             DateTime?
+
+ 
+}

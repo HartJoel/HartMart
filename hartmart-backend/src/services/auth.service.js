@@ -61,6 +61,37 @@ class AuthService {
       throw error;
     }
   }
+
+  static async login(data) {
+    try {
+      const { email, password } = data;
+
+      const user = await AuthRepository.findUserByEmail(email);
+
+      if (!user) {
+        throw new Error("User doesn't exist");
+      }
+
+      if (!user.emailVerified) {
+        throw new Error("Email not verified");
+      }
+
+      // Compare password
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+
+      if (!isPasswordValid) {
+        throw new Error("Invalid email or password");
+      }
+
+      delete user.password;
+
+      return {
+        user,
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 export default AuthService;

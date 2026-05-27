@@ -53,4 +53,29 @@ const verifyEmail = async (req, res) => {
   }
 };
 
-export {register, verifyEmail};
+const login = async (req, res) => {
+  try {
+    const { user } = await AuthService.login(req.body);
+
+    // Return user data (consistent with register response)
+    return res.status(200).json({
+      success: true,
+      message: "Logged in successfully",
+      data: {
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
+      },
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+export { register, verifyEmail, login };

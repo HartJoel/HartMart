@@ -7,14 +7,20 @@ class UserRepository {
     });
   }
 
-  static async updateUser(id, name, avatar){
+  static async updateUser(id, name, avatar) {
     return prisma.user.update({
-        where: { id },
-        data:{
-          name: name,
-          avatar: avatar
-        }
-    })
+      where: { id },
+      data: {
+        name: name,
+        avatar: avatar,
+      },
+    });
+  }
+
+  static async findAll() {
+    return prisma.user.findMany({
+      orderBy: { createdAt: "desc" },
+    });
   }
 }
 

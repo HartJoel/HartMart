@@ -52,4 +52,39 @@ const updateProfile = async (req, res) => {
   }
 };
 
-export { getCurrentUser, updateProfile };
+const getUserById = async (req, res) => {
+  try {
+    const user = await UserService.getUserById(req.params.id);
+
+    return res.json({
+      success: true,
+      message: "User Details ",
+      data: user,
+    });
+  } catch (error) {
+    return res.status(404).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+const getAllUsers = async (req, res) => {
+  try {
+    const users = await UserService.getAllUsers();
+
+    return res.json({
+      success: true,
+      message: "All Users",
+      number: users.length,
+      data: users,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+export { getCurrentUser, updateProfile, getUserById, getAllUsers };

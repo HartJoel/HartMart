@@ -5,6 +5,7 @@ import { connectDB, disconnectDB } from "./config/db.js";
 
 // Import Routes
 import authRoutes from "./v1/routes/auth.routes.js";
+import userRoutes from "./v1/routes/user.routes.js";
 
 config();
 connectDB();
@@ -17,6 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use("/v1/auth", authRoutes);
+app.use("/v1/users", userRoutes);
 
 // Handle unhandled promise rejections (e.g., database connection errors)
 process.on("unhandledRejection", (err) => {

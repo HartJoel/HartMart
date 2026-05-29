@@ -24,6 +24,13 @@ enum UserRole {
   CUSTOMER
 }
 
+enum Status {
+  ACTIVE
+  SUSPENDED
+  BANNED
+  PENDING
+}
+
 // ============================================================================
 // CORE USER DOMAIN
 // ============================================================================
@@ -43,23 +50,19 @@ model User {
   emailVerificationTokenExpires    DateTime?
   passwordResetToken    String?  @unique
   passwordResetExpires  DateTime?
-  twoFactorSecret       String?  @db.VarChar(255)
-  twoFactorEnabled      Boolean  @default(false)
   
   // Account status
-  status                String   @default("active") @db.VarChar(50)
-  lastLoginAt           DateTime?
-  lastLoginIp           String?  @db.VarChar(50)
-  loginAttempts         Int      @default(0)
-  lockoutUntil          DateTime?
-  
-  
+  status                 Status @default(ACTIVE)
+   
   // Timestamps
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
   deletedAt             DateTime?
 
+     // Relationships
+  addresses             Address[]
   refreshTokens RefreshToken[]
+
 }
 
 
@@ -73,6 +76,28 @@ model RefreshToken {
   expiresAt   DateTime
 
   createdAt   DateTime @default(now())
+
+ 
+
+  @@index([userId])
+}
+
+model Address {
+  id                    String   @id @default(cuid())
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+
+  addressLine          String   @db.VarChar(255)
+  city                  String   @db.VarChar(100)
+  state                 String   @db.VarChar(100)
+  country               String   @db.VarChar(100)
+  zipCode               String   @db.VarChar(20)
+  isDefault             Boolean  @default(false)
+  
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   @@index([userId])
 }

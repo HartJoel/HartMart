@@ -1,3 +1,4 @@
+import AddressService from "../../services/address.service.js";
 import UserService from "../../services/user.service.js";
 
 const getCurrentUser = async (req, res) => {
@@ -56,7 +57,7 @@ const getUserById = async (req, res) => {
   try {
     const user = await UserService.getUserById(req.params.id);
 
-    return res.json({
+    return res.status(201).json({
       success: true,
       message: "User Details ",
       data: user,
@@ -87,4 +88,27 @@ const getAllUsers = async (req, res) => {
   }
 };
 
-export { getCurrentUser, updateProfile, getUserById, getAllUsers };
+const createAddress = async (req, res) => {
+  try {
+    const address = await AddressService.addAddress(req.user.id, req.body);
+
+    res.status(201).json({
+      status: "success",
+      message: "Add new address to profile",
+      data: address,
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: "error",
+      message: error.message,
+    });
+  }
+};
+
+export {
+  getCurrentUser,
+  updateProfile,
+  getUserById,
+  getAllUsers,
+  createAddress,
+};

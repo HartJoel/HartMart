@@ -5,6 +5,7 @@ import {
   updateProfile,
   getAllUsers,
   getUserById,
+  createAddress,
 } from "../controllers/user.controller.js";
 
 const router = express.Router();
@@ -15,5 +16,6 @@ router.get("/me", getCurrentUser);
 router.get("/:id", getUserById);
 router.get("/", getAllUsers);
 router.patch("/me", updateProfile);
+router.post("/addresses", createAddress);
 
 export default router;

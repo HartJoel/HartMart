@@ -12,8 +12,12 @@ const router = express.Router();
 router.use(authMiddleware);
 
 router.get("/me", getCurrentUser);
-router.get("/:id", getUserById);
 router.get("/", getAllUsers);
+
+
+
 router.patch("/me", updateProfile);
+
+router.get("/:id", getUserById);
 
 export default router;

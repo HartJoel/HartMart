@@ -7,6 +7,7 @@ import { connectDB, disconnectDB } from "./config/db.js";
 import authRoutes from "./v1/routes/auth.routes.js";
 import userRoutes from "./v1/routes/user.routes.js";
 import refreshRoutes from "./v1/routes/refresh.routes.js";
+import addressRoutes from "./v1/routes/address.route.js";
 
 config();
 connectDB();
@@ -20,6 +21,7 @@ app.use(cookieParser());
 
 app.use("/v1/auth", authRoutes);
 app.use("/v1/users", userRoutes);
+app.use("/v1/addresses", addressRoutes);
 app.use("/v1/auth", refreshRoutes);
 
 // Handle unhandled promise rejections (e.g., database connection errors)

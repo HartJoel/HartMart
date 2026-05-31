@@ -56,7 +56,7 @@ const getUserById = async (req, res) => {
   try {
     const user = await UserService.getUserById(req.params.id);
 
-    return res.json({
+    return res.status(201).json({
       success: true,
       message: "User Details ",
       data: user,
@@ -87,4 +87,12 @@ const getAllUsers = async (req, res) => {
   }
 };
 
-export { getCurrentUser, updateProfile, getUserById, getAllUsers };
+
+
+export {
+  getCurrentUser,
+  updateProfile,
+  getUserById,
+  getAllUsers,
+ 
+};

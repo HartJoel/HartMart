@@ -9,6 +9,8 @@ import userRoutes from "./v1/routes/user.routes.js";
 import refreshRoutes from "./v1/routes/refresh.routes.js";
 import addressRoutes from "./v1/routes/address.route.js";
 import vendorRoutes from "./v1/routes/vendor.route.js";
+import categoryRoutes from "./v1/routes/category.route.js";
+import productRoutes from "./v1/routes/product.route.js";
 
 config();
 connectDB();
@@ -25,6 +27,8 @@ app.use("/v1/users", userRoutes);
 app.use("/v1/addresses", addressRoutes);
 app.use("/v1/auth", refreshRoutes);
 app.use("/v1/vendor", vendorRoutes);
+app.use("/v1/category", categoryRoutes);
+app.use("/v1/products", productRoutes);
 
 // Handle unhandled promise rejections (e.g., database connection errors)
 process.on("unhandledRejection", (err) => {

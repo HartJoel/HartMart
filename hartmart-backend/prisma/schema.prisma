@@ -31,6 +31,41 @@ enum Status {
   PENDING
 }
 
+enum VendorStatus {
+  PENDING_VERIFICATION    
+  VERIFIED               
+  ACTIVE                  
+  SUSPENDED              
+  REJECTED               
+  INACTIVE               
+}
+
+enum OrderStatus {
+  PENDING                 
+  CONFIRMED             
+  PROCESSING             
+  SHIPPED                
+  DELIVERED              
+  CANCELLED              
+  REFUNDED               
+}
+
+enum ProductStatus {
+  ACTIVE
+  DRAFT
+  ARCHIVED
+  INACTIVE
+}
+
+enum OrderItemStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  RETURNED
+  CANCELLED
+}
+
 // ============================================================================
 // CORE USER DOMAIN
 // ============================================================================
@@ -60,8 +95,11 @@ model User {
   deletedAt             DateTime?
 
      // Relationships
+  vendor                Vendor?
   addresses             Address[]
   refreshTokens RefreshToken[]
+  orders                Order[]
+  reviews               Review[]
 
 }
 
@@ -100,4 +138,312 @@ model Address {
   updatedAt             DateTime @updatedAt
 
   @@index([userId])
+}
+
+// ============================================================================
+// VENDOR DOMAIN
+// ============================================================================
+
+model Vendor {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Store Information
+  storeName             String   @unique @db.VarChar(255)
+  storeSlug             String   @unique @db.VarChar(255)   // URL-friendly name
+  storeDescription      String?  @db.Text
+  storeLogo             String?  @db.Text                   // Cloudinary URL
+  storeBanner           String?  @db.Text
+  storeCategory         String   @db.VarChar(100)           // e.g., "Electronics", "Fashion"
+  
+  // Verification Status
+  status                VendorStatus @default(PENDING_VERIFICATION)            // JSON array of document URLs
+  rejectionReason       String?   @db.Text
+  verifiedAt            DateTime?
+  
+  // Compliance & Identity
+  businessRegistration  String?   @db.VarChar(100)          // License number
+  taxId                 String?   @db.VarChar(50)
+  businessAddress       String?   @db.Text
+  businessPhone         String?   @db.VarChar(20)
+  
+  // Banking Details (Encrypted in production)
+  bankName              String?   @db.VarChar(100)
+  bankAccountNumber     String?   @db.VarChar(50)
+  bankAccountName       String?   @db.VarChar(100)
+  bankCode              String?   @db.VarChar(20)
+  bankVerified          Boolean   @default(false)
+  
+  // Ratings
+  averageRating         Float     @default(0)
+  totalReviews          Int       @default(0)
+  
+  // Relationships
+  products              Product[]
+  orders                OrderItem[]
+  // wallet                VendorWallet?
+  // payouts               Payout[]
+  // metrics               VendorMetrics?
+  // auditLogs             AuditLog[]
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  deletedAt             DateTime?
+
+  @@index([status])
+  @@index([storeSlug])
+  @@index([userId])
+  @@index([deletedAt])
+}
+
+// ============================================================================
+// PRODUCT DOMAIN
+// ============================================================================
+
+model Category {
+  id                    String   @id @default(cuid())
+  name                  String   @unique @db.VarChar(100)
+  slug                  String   @unique @db.VarChar(100)
+  description           String?  @db.Text
+  icon                  String?  @db.Text                   // Cloudinary icon
+  parentId              String?
+  parent                Category? @relation("SubCategories", fields: [parentId], references: [id])
+  subCategories        Category[] @relation("SubCategories")
+  
+  products              Product[]
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([slug])
+}
+
+model Product {
+  id                    String   @id @default(cuid())
+  vendorId              String
+  vendor                Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  
+  categoryId            String
+  category              Category @relation(fields: [categoryId], references: [id])
+  
+  sku                   String   @unique @db.VarChar(100)
+  name                  String   @db.VarChar(255)
+  slug                  String    @unique @db.VarChar(255)
+  description           String   @db.Text
+  
+  // Pricing
+  basePrice             Decimal  @db.Decimal(10, 2)
+  discountPrice         Decimal? @db.Decimal(10, 2)        // Sale price
+  costPrice             Decimal? @db.Decimal(10, 2)        // For analytics
+  currency              String   @default("NGN") @db.VarChar(3)
+  
+  // Inventory
+  totalStock            Int      @default(0)
+  availableStock        Int      @default(0)
+  reservedStock         Int      @default(0)               // For pending orders
+  reorderLevel          Int      @default(10)              // Trigger vendor notification
+  
+  // Media
+  images                String[] @default([])              // JSON array of Cloudinary URLs
+
+  
+  // Details
+  weight                Decimal? @db.Decimal(8, 3)         // kg
+  dimensions            String?  @db.VarChar(100)          // "10x10x10"
+  attributes            Json     @default("{}")            // {color: "red", size: "M", ...}
+  
+  // Ratings & Reviews
+  averageRating         Float    @default(0)
+  reviewCount           Int      @default(0)
+  
+  // Status
+  status                ProductStatus @default(ACTIVE)
+  isApproved            Boolean  @default(true)
+  isPublished           Boolean  @default(true)
+  
+  // Relationships
+  orderItems            OrderItem[]
+  reviews               Review[]
+  wishlistItems         WishlistItem[]
+  cartItems             CartItem[]
+  
+  // Timestamps
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  publishedAt           DateTime?
+  deletedAt             DateTime?
+
+  @@unique([vendorId, sku])
+  @@index([vendorId])
+  @@index([categoryId])
+  @@index([status])
+  @@index([isPublished])
+  @@index([createdAt])
+  @@index([deletedAt])
+
+}
+
+model WishlistItem {
+  id                    String   @id @default(cuid())
+  userId                String
+  productId             String
+  product               Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  createdAt             DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@index([userId])
+}
+
+model CartItem {
+  id                    String   @id @default(cuid())
+  userId                String
+  productId             String
+  product               Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  quantity              Int
+  selectedVariation     Json?                               // {color: "red", size: "L"}
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@unique([userId, productId])
+  @@index([userId])
+}
+
+model Review {
+  id                    String   @id @default(cuid())
+  productId             String
+  product               Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  orderId               String
+  order                 Order    @relation(fields: [orderId], references: [id])
+  
+  rating                Int      @db.SmallInt              // 1-5
+  comment               String?  @db.Text
+  
+  images                String[] @default([])              // Cloudinary URLs
+  vendorResponse        String?  @db.Text
+  vendorResponseAt      DateTime?
+  
+  helpful               Int      @default(0)               // Upvote count
+  
+  isVerified            Boolean  @default(true)            // Verified purchase
+  status                String   @default("active") @db.VarChar(50)
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@unique([productId, userId, orderId])
+  @@index([productId])
+  @@index([userId])
+  @@index([rating])
+}
+
+// ============================================================================
+// ORDER DOMAIN
+// ============================================================================
+
+model Order {
+  id                    String   @id @default(cuid())
+  orderNumber           String   @unique @db.VarChar(50)   // User-facing order ID
+  
+  customerId            String
+  customer              User     @relation(fields: [customerId], references: [id])
+  
+  // Status
+  status                OrderStatus @default(PENDING)
+  
+  // Pricing
+  subtotal              Decimal  @db.Decimal(12, 2)         // Before taxes/shipping
+  taxAmount             Decimal  @default(0) @db.Decimal(10, 2)
+  shippingCost          Decimal  @default(0) @db.Decimal(10, 2)
+  discountAmount        Decimal  @default(0) @db.Decimal(10, 2)
+  totalAmount           Decimal  @db.Decimal(12, 2)
+  
+  // Shipping
+  shippingAddress       String   @db.Text                   // JSON: {addressLine1, city, state, country, zipCode}
+  estimatedDelivery     DateTime?
+  actualDelivery        DateTime?
+  trackingNumber        String?  @db.VarChar(100)
+  
+  
+  // Payment
+  // paymentId             String?
+  // payment               Payment? @relation(fields: [paymentId], references: [id])
+  // paymentMethod         PaymentMethod
+  
+  // Notes
+  customerNotes         String?  @db.Text
+  adminNotes            String?  @db.Text
+  
+  // Relationships
+  items                 OrderItem[]
+  timeline              OrderTimeline[]
+  reviews               Review[]
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  confirmedAt           DateTime?
+  shippedAt             DateTime?
+  deliveredAt           DateTime?
+  cancelledAt           DateTime?
+
+  @@index([customerId])
+  @@index([status])
+  @@index([orderNumber])
+  @@index([createdAt])
+  // @@index([paymentId])
+  // Composite index for common queries
+  @@index([customerId, status])
+  @@index([customerId, createdAt])
+}
+
+model OrderItem {
+  id                    String   @id @default(cuid())
+  orderId               String
+  order                 Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  productId             String
+  product               Product  @relation(fields: [productId], references: [id])
+  
+  vendorId              String
+  vendor                Vendor   @relation(fields: [vendorId], references: [id])
+  
+  quantity              Int
+  unitPrice             Decimal  @db.Decimal(10, 2)
+  totalPrice            Decimal  @db.Decimal(12, 2)
+  
+  // Selected attributes (for variants)
+  selectedVariation     Json?
+  
+  // Fulfillment
+  status                OrderItemStatus  @default(PENDING)  // "pending", "shipped", "delivered", "returned"
+  fulfillmentDate       DateTime?
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([orderId])
+  @@index([vendorId])
+  @@index([productId])
+}
+
+model OrderTimeline {
+  id                    String   @id @default(cuid())
+  orderId               String
+  order                 Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  status                OrderStatus
+  note                  String?  @db.Text
+  createdBy             String?                             // Admin or system who made change
+  
+  createdAt             DateTime @default(now())
+
+  @@index([orderId])
+  @@index([status])
 }

@@ -18,6 +18,12 @@ class ProductRepository {
       where: { slug },
     });
   }
+
+  static async findbyId(id) {
+    return prisma.product.findUnique({
+      where: { id },
+    });
+  }
 }
 
 export default ProductRepository;

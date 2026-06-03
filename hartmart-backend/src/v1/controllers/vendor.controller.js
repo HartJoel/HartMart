@@ -6,7 +6,7 @@ const applyAsVendor = async (req, res) => {
 
     return res.status(201).json({
       succes: "true",
-      message: "Vendor application submitted successfully",
+      message: "Vendor application submitted successfully. Please login again",
       data: vendor,
     });
   } catch (error) {

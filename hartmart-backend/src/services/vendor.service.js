@@ -1,6 +1,8 @@
 import VendorRepository from "../repositories/vendor.responsitory.js";
 import slugify from "slugify";
 import crypto from "crypto";
+import { prisma } from "../config/db.js";
+import UserRepository from "../repositories/user.repository.js";
 
 class VendorService {
   static async applyAsVendor(userId, data) {
@@ -19,6 +21,8 @@ class VendorService {
     if (existingStore) {
       throw new Error("Store name already exists");
     }
+
+    await UserRepository.upadateRole(userId)
 
     return await VendorRepository.create({
       userId,

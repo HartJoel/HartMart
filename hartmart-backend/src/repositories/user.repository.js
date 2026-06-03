@@ -17,6 +17,15 @@ class UserRepository {
     });
   }
 
+  static async upadateRole(userId){
+    return prisma.user.update({
+      where: {id: userId},
+      data:{
+        role: "VENDOR"
+      }
+    })
+  }
+
   static async findAll() {
     return prisma.user.findMany({
       orderBy: { createdAt: "desc" },

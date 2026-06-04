@@ -24,6 +24,10 @@ class ProductRepository {
       where: { id },
     });
   }
+
+  static async getProducts() {
+    return prisma.product.findMany({});
+  }
 }
 
 export default ProductRepository;

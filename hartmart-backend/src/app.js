@@ -12,6 +12,7 @@ import vendorRoutes from "./v1/routes/vendor.route.js";
 import categoryRoutes from "./v1/routes/category.route.js";
 import productRoutes from "./v1/routes/product.route.js";
 import cartRoutes from "./v1/routes/cart.route.js";
+import wishLists from "./v1/routes/wishlist.route.js";
 
 config();
 connectDB();
@@ -31,6 +32,7 @@ app.use("/v1/vendor", vendorRoutes);
 app.use("/v1/category", categoryRoutes);
 app.use("/v1/products", productRoutes);
 app.use("/v1/carts", cartRoutes);
+app.use("/v1/wishlists", wishLists);
 
 // Handle unhandled promise rejections (e.g., database connection errors)
 process.on("unhandledRejection", (err) => {

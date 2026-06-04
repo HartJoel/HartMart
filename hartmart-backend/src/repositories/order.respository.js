@@ -16,9 +16,6 @@ class OrderRespository {
   static async findByCustomer(customerId) {
     return prisma.order.findMany({
       where: { customerId },
-      include: {
-        coupon: true,
-      },
     });
   }
 

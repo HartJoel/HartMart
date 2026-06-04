@@ -83,7 +83,7 @@ class OrderService {
   }
 
    static async getUserOrders(userId) {
-    return await OrderRespository.findByCustomerId(userId);
+    return await OrderRespository.findByCustomer(userId);
   }
 }
 

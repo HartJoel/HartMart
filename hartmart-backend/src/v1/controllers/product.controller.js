@@ -1,21 +1,129 @@
 import ProductService from "../../services/product.service.js";
 
 const createProduct = async (req, res) => {
-    try {
-      const product = await ProductService.createProduct(req.user.id, req.body);
+  try {
+    const product = await ProductService.createProduct(req.user.id, req.body);
 
-      return res.status(201).json({
-        success: "true",
-        message: "Product created successfully",
-        data: product,
-      });
-    } catch (error) {
-      return res.status(400).json({
-        success: false,
-        error: error.message,
-      });
-    }
+    return res.status(201).json({
+      success: "true",
+      message: "Product created successfully",
+      data: product,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      error: error.message,
+    });
   }
+};
 
+const getAllProducts = async (req, res) => {
+  try {
+    const products = await ProductService.getAllProducts();
 
-export default createProduct;
+    return res.status(201).json({
+      success: "true",
+      message: "Products list",
+      data: products,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+const getProductById = async (req, res) => {
+  try {
+    const product = await ProductService.getProductById(req.params.productId);
+    return res.status(201).json({
+      success: "true",
+      message: "Product",
+      data: product,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+const updateProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const {
+      name,
+      description,
+      basePrice,
+      discountPrice,
+      totalStock,
+      availableStock,
+      reservedStock,
+      reorderLevel,
+      images,
+      weight,
+      dimensions,
+      attributes,
+      categoryId,
+      categorySlug,
+      slug,
+    } = req.body;
+
+    const updatedProduct = await ProductService.updateProduct(id, userId, {
+      name,
+      description,
+      basePrice,
+      discountPrice,
+      totalStock,
+      availableStock,
+      reservedStock,
+      reorderLevel,
+      images,
+      weight,
+      dimensions,
+      attributes,
+      categoryId,
+      categorySlug,
+      slug,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Product updated successfully",
+      data: updatedProduct,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+const deleteProduct = async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const userId = req.user.id;
+
+    await ProductService.deleteProduct(productId, userId);
+
+    return res.status(204).send();
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export {
+  createProduct,
+  getAllProducts,
+  getProductById,
+  updateProduct,
+  deleteProduct,
+};

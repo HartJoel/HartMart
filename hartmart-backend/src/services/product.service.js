@@ -53,8 +53,8 @@ class ProductService {
     });
   }
 
-  static async getAllProducts() {
-    const products = await ProductRepository.getProducts();
+  static async getAllProducts(query) {
+    const products = await ProductRepository.getProducts(query);
     return products;
   }
 

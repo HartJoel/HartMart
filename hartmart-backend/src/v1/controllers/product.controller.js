@@ -19,13 +19,9 @@ const createProduct = async (req, res) => {
 
 const getAllProducts = async (req, res) => {
   try {
-    const products = await ProductService.getAllProducts();
+    const products = await ProductService.getAllProducts(req.query);
 
-    return res.status(201).json({
-      success: "true",
-      message: "Products list",
-      data: products,
-    });
+    return res.status(201).json(products);
   } catch (error) {
     return res.status(400).json({
       success: false,

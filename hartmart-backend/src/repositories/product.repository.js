@@ -1,4 +1,5 @@
 import { prisma } from "../config/db.js";
+import QueryBuilder from "../utils/queryBuilder.js";
 
 class ProductRepository {
   static async findBySku(sku) {
@@ -28,12 +29,13 @@ class ProductRepository {
     });
   }
 
-  static async getProducts() {
-    return prisma.product.findMany({
-      where: {
-        deletedAt: null,
-      },
-    });
+  static async getProducts(query) {
+    return new QueryBuilder(prisma.product, query)
+      .search(["name", "description"])
+      .filter()
+      .sort()
+      .paginate()
+      .exec();
   }
 
   static async updateProduct(id, data) {
@@ -84,16 +86,16 @@ class ProductRepository {
   }
 
   static async getLowStockProducts(vendorId) {
-  return prisma.product.findMany({
-    where: {
-      vendorId,
-      deletedAt: null,
-      availableStock: {
-        lte: prisma.product.fields.reorderLevel,
+    return prisma.product.findMany({
+      where: {
+        vendorId,
+        deletedAt: null,
+        availableStock: {
+          lte: prisma.product.fields.reorderLevel,
+        },
       },
-    },
-  });
-}
+    });
+  }
 
   static async softDeleteProduct(productId) {
     return prisma.product.update({

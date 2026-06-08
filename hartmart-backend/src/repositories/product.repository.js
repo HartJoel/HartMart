@@ -64,6 +64,37 @@ class ProductRepository {
     });
   }
 
+  static async findVendorProducts(vendorId) {
+    return prisma.product.findMany({
+      where: {
+        vendorId,
+      },
+    });
+  }
+
+  static async updateStock(productId, data) {
+    return prisma.product.update({
+      where: { id: productId },
+      data: {
+        totalStock: data.totalStock,
+        reservedStock: data.reservedStock,
+        availableStock: data.totalStock - data.reservedStock,
+      },
+    });
+  }
+
+  static async getLowStockProducts(vendorId) {
+  return prisma.product.findMany({
+    where: {
+      vendorId,
+      deletedAt: null,
+      availableStock: {
+        lte: prisma.product.fields.reorderLevel,
+      },
+    },
+  });
+}
+
   static async softDeleteProduct(productId) {
     return prisma.product.update({
       where: { id: productId },

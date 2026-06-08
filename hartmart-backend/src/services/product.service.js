@@ -112,6 +112,38 @@ class ProductService {
     return await ProductRepository.updateProduct(productId, updatedData);
   }
 
+  static async getVendorProduct(userId) {
+    const vendor = await VendorRepository.findUserId(userId);
+    return ProductRepository.findVendorProducts(vendor.id);
+  }
+
+  static async getLowStockProducts(userId) {
+    const vendor = await VendorRepository.findUserId(userId);
+
+    if (!vendor) throw new Error("Only vendors allowed");
+
+    return ProductRepository.getLowStockProducts(vendor.id);
+  }
+
+  static async updateStock(productId, userId, data) {
+    const vendor = await VendorRepository.findUserId(userId);
+
+    if (!vendor) throw new Error("Only vendors allowed");
+
+    const product = await ProductRepository.findbyId(productId);
+    if (!product) throw new Error("Product not found");
+
+    if (product.vendorId !== vendor.id) {
+      throw new Error("Unauthorized");
+    }
+
+    if (data.reservedStock > data.totalStock) {
+      throw new Error("Invalid stock values");
+    }
+
+    return ProductRepository.updateStock(productId, data);
+  }
+
   static async deleteProduct(productId, userId) {
     const vendor = await VendorRepository.findUserId(userId);
 

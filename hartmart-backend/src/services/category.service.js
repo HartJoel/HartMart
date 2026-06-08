@@ -25,6 +25,34 @@ class CategoryService {
       parentId: data.parentId || null,
     });
   }
+
+  static async getCategory(id) {
+    return CategoryRepository.findById(id);
+  }
+
+  static async list() {
+    return CategoryRepository.listCategories();
+  }
+
+  static async update(id, data) {
+    let slug;
+
+    if (data.name) {
+      slug = slugify(data.name, {
+        lower: true,
+        strict: true,
+      });
+    }
+
+    return CategoryRepository.update(id, {
+      ...data,
+      ...(slug && { slug }),
+    });
+  }
+
+  static async delete(id) {
+    return CategoryRepository.deleteById(id);
+  }
 }
 
 export default CategoryService;

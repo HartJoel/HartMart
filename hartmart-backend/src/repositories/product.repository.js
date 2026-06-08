@@ -66,12 +66,14 @@ class ProductRepository {
     });
   }
 
-  static async findVendorProducts(vendorId) {
-    return prisma.product.findMany({
-      where: {
-        vendorId,
-      },
-    });
+  static async findVendorProducts(vendorId, query) {
+    query.vendorId = vendorId;
+    return new QueryBuilder(prisma.product, query)
+      .search(["name", "description"])
+      .filter()
+      .sort()
+      .paginate()
+      .exec();
   }
 
   static async updateStock(productId, data) {
@@ -85,16 +87,21 @@ class ProductRepository {
     });
   }
 
-  static async getLowStockProducts(vendorId) {
-    return prisma.product.findMany({
-      where: {
-        vendorId,
-        deletedAt: null,
-        availableStock: {
-          lte: prisma.product.fields.reorderLevel,
-        },
-      },
-    });
+  static async getLowStockProducts(vendorId, query) {
+    query.vendorId = vendorId;
+    query.deletedAt = null;
+
+    const result = await new QueryBuilder(prisma.product, query)
+      .filter()
+      .sort()
+      .paginate()
+      .exec();
+
+    result.data = result.data.filter(
+      (product) => product.availableStock <= product.reorderLevel,
+    );
+
+    return result;
   }
 
   static async softDeleteProduct(productId) {

@@ -112,17 +112,17 @@ class ProductService {
     return await ProductRepository.updateProduct(productId, updatedData);
   }
 
-  static async getVendorProduct(userId) {
+  static async getVendorProduct(userId, query) {
     const vendor = await VendorRepository.findUserId(userId);
-    return ProductRepository.findVendorProducts(vendor.id);
+    return ProductRepository.findVendorProducts(vendor.id, query);
   }
 
-  static async getLowStockProducts(userId) {
+  static async getLowStockProducts(userId, query) {
     const vendor = await VendorRepository.findUserId(userId);
 
     if (!vendor) throw new Error("Only vendors allowed");
 
-    return ProductRepository.getLowStockProducts(vendor.id);
+    return ProductRepository.getLowStockProducts(vendor.id, query);
   }
 
   static async updateStock(productId, userId, data) {

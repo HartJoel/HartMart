@@ -20,8 +20,11 @@ const createProduct = async (req, res) => {
 const getAllProducts = async (req, res) => {
   try {
     const products = await ProductService.getAllProducts(req.query);
-
-    return res.status(201).json(products);
+    return res.status(201).json({
+      success: true,
+      message: "Get all Products",
+      data: products,
+    });
   } catch (error) {
     return res.status(400).json({
       success: false,
@@ -32,7 +35,10 @@ const getAllProducts = async (req, res) => {
 
 const getVendorProducts = async (req, res) => {
   try {
-    const vendorProducts = await ProductService.getVendorProduct(req.user.id);
+    const vendorProducts = await ProductService.getVendorProduct(
+      req.user.id,
+      req.query,
+    );
 
     return res.status(201).json({
       success: "true",
@@ -72,7 +78,10 @@ const updateStock = async (req, res) => {
 
 const getLowStock = async (req, res) => {
   try {
-    const data = await ProductService.getLowStockProducts(req.user.id);
+    const data = await ProductService.getLowStockProducts(
+      req.user.id,
+      req.query,
+    );
 
     return res.status(201).json({
       success: "true",

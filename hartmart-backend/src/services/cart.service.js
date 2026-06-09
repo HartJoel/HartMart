@@ -12,10 +12,16 @@ class CartService {
     const existing = await CartRespository.findItem(userId, data.productId);
 
     if (existing) {
-      return await CartRespository.updateQuantity(
-        existing.id,
-        existing.quantity + data.quantity,
-      );
+      const newQuantity = existing.quantity + data.quantity;
+
+      // OPTIONAL but important: stock validation
+      const product = await ProductRepository.findbyId(data.productId);
+
+      if (newQuantity > product.availableStock) {
+        throw new Error("Not enough stock available");
+      }
+
+      return await CartRespository.updateQuantity(existing.id, newQuantity);
     }
 
     return await CartRespository.create({
@@ -40,6 +46,22 @@ class CartService {
       total,
       itemCount,
     };
+  }
+
+  static async updateCartItem(cartItemId, quantity) {
+    if (quantity <= 0) {
+      throw new Error("Quantity must be greater than 0");
+    }
+
+    return CartRespository.updateQuantity(cartItemId, quantity);
+  }
+
+  static async removeFromCart(cartItemId) {
+    return CartRespository.deleteItem(cartItemId);
+  }
+
+  static async clearCart(userId) {
+    return CartRespository.clearCart(userId);
   }
 }
 

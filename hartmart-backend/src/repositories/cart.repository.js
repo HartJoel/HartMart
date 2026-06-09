@@ -33,6 +33,29 @@ class CartRespository {
       },
     });
   }
+
+  // static async updateQuantity(cartItemId, quantity) {
+  //   return prisma.cartItem.update({
+  //     where: {
+  //       cartItemId,
+  //     },
+  //     data: quantity,
+  //   });
+  // }
+
+  static async deleteItem(cartItemId) {
+    return prisma.cartItem.delete({
+      where: { id: cartItemId },
+    });
+  }
+
+  static async clearCart(userId) {
+    return prisma.cartItem.deleteMany({
+      where: {
+        userId,
+      },
+    });
+  }
 }
 
 export default CartRespository;

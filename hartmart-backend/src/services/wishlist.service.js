@@ -24,6 +24,18 @@ class WishlistService {
   static async getWishlist(userId) {
     return await WishlistRepository.getUserWishlist(userId);
   }
+
+  static async deleteFromWishlist(userId, wishlistId) {
+    return await WishlistRepository.removeItem(userId, wishlistId);
+  }
+
+  static async checkWishlist(userId, productId) {
+    const item = await WishlistRepository.findItem(userId, productId);
+
+    return {
+      inWishlist: !!item,
+    };
+  }
 }
 
 export default WishlistService;

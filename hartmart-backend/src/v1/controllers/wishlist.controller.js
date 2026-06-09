@@ -37,4 +37,37 @@ const getWishlist = async (req, res) => {
   }
 };
 
-export {getWishlist, addToWishList}
+const removeFromWishlist = async (req, res) => {
+  try {
+    await WishlistService.deleteFromWishlist(req.user.id, req.params.productId);
+
+    return res.status(204).send();
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+const checkWishlist = async (req, res) => {
+  try {
+    const result = await WishlistService.checkWishlist(
+      req.user.id,
+      req.params.productId,
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Check if product in wishlist",
+      data: result,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+export { getWishlist, addToWishList, removeFromWishlist, checkWishlist };

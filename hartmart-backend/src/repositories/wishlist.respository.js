@@ -24,6 +24,17 @@ class WishlistRepository {
       },
     });
   }
+
+  static async removeItem(userId, productId) {
+  return prisma.wishlistItem.delete({
+    where: {
+      userId_productId: {
+        userId,
+        productId,
+      },
+    },
+  });
+}
 }
 
 export default WishlistRepository;

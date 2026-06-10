@@ -7,12 +7,12 @@ class UserRepository {
     });
   }
 
-  static async updateUser(id, name, avatar) {
+  static async updateUser(id, name, avatarData) {
     return prisma.user.update({
       where: { id },
       data: {
         name: name,
-        avatar: avatar,
+        avatar: avatarData,
       },
     });
   }

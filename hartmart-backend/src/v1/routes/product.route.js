@@ -10,12 +10,13 @@ import {
   updateProduct,
   updateStock,
 } from "../controllers/product.controller.js";
+import { upload } from "../middleware/upload.js";
 
 const router = express.Router();
 
 router.use(authMiddleware);
 
-router.post("/", createProduct);
+router.post("/", upload.single("image"), createProduct);
 router.get("/", getAllProducts);
 router.get("/vendor/me", getVendorProducts);
 router.get("/vendor/me/low-stock", getLowStock);

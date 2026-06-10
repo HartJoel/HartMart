@@ -4,9 +4,10 @@ import crypto from "crypto";
 import VendorRepository from "../repositories/vendor.responsitory.js";
 import CategoryRepository from "../repositories/category.responsitory.js";
 import { prisma } from "../config/db.js";
+import { uploadProductToCloudinary } from "../utils/uploadToCloudinary.js";
 
 class ProductService {
-  static async createProduct(vendorUserId, data) {
+  static async createProduct(vendorUserId, data, file) {
     const vendor = await VendorRepository.findUserId(vendorUserId);
 
     if (!vendor) {
@@ -18,6 +19,17 @@ class ProductService {
 
     if (!category) {
       throw Error("Invalid category selected");
+    }
+
+    let imageData = null;
+
+    if (file) {
+      const uploadedImage = await uploadProductToCloudinary(file.buffer);
+
+      imageData = {
+        url: uploadedImage.secure_url,
+        publicId: uploadedImage.public_id,
+      };
     }
 
     const sku = `SKU-${crypto.randomBytes(4).toString("hex")}`;
@@ -39,15 +51,17 @@ class ProductService {
       sku,
       slug,
 
-      basePrice: data.basePrice,
-      discountPrice: data.discountPrice,
+      basePrice: Number(data.basePrice),
+      discountPrice: Number(data.discountPrice),
 
-      totalStock: data.totalStock,
-      availableStock: data.totalStock,
-      reorderLevel: data.reorderLevel,
+      totalStock: Number(data.totalStock),
+      availableStock: Number(data.totalStock),
+      reorderLevel: Number(data.reorderLevel),
 
-      images: data.images,
-      weight: data.weight,
+      weight: data.weight ? Number(data.weight) : null,
+
+      images: imageData ? [imageData] : [],
+
       dimensions: data.dimensions,
       attributes: data.attributes,
     });

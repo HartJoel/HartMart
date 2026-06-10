@@ -28,7 +28,11 @@ const getCurrentUser = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const user = await UserService.updateProfile(req.user.id, req.body);
+    const user = await UserService.updateProfile(
+      req.user.id,
+      req.body,
+      req.file,
+    );
 
     return res.json({
       success: true,
@@ -87,12 +91,4 @@ const getAllUsers = async (req, res) => {
   }
 };
 
-
-
-export {
-  getCurrentUser,
-  updateProfile,
-  getUserById,
-  getAllUsers,
- 
-};
+export { getCurrentUser, updateProfile, getUserById, getAllUsers };

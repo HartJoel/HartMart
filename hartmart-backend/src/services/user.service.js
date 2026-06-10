@@ -1,4 +1,5 @@
 import UserRepository from "../repositories/user.repository.js";
+import { uploadAvatarToCloudinary } from "../utils/uploadToCloudinary.js";
 
 class UserService {
   static async getCurrentUser(userId) {
@@ -13,9 +14,9 @@ class UserService {
     return safeUser;
   }
 
-  static async updateProfile(userId, data) {
+  static async updateProfile(userId, data, file) {
     try {
-      const { name, avatar } = data;
+      const { name } = data;
 
       const user = await UserRepository.findById(userId);
 
@@ -23,7 +24,22 @@ class UserService {
         throw new Error("User not found");
       }
 
-      const updatedUser = await UserRepository.updateUser(userId, name, avatar);
+      let avatarData = user.avatar;
+
+      if (file) {
+        const uploadedImage = await uploadAvatarToCloudinary(file.buffer);
+
+        avatarData = {
+          url: uploadedImage.secure_url,
+          publicId: uploadedImage.public_id,
+        };
+      }
+
+      const updatedUser = await UserRepository.updateUser(
+        userId,
+        name,
+        avatarData,
+      );
 
       return updatedUser;
     } catch (error) {

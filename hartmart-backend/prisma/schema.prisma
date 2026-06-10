@@ -75,7 +75,7 @@ model User {
   email                 String   @unique @db.VarChar(255)
   password              String   @db.VarChar(255)
   name                  String   @db.VarChar(100)
-  avatar                String?  @db.Text             // Cloudinary URL
+  avatar                Json?               // Cloudinary URL
   role                  UserRole @default(CUSTOMER)
   
   // Security
@@ -245,7 +245,7 @@ model Product {
   reorderLevel          Int      @default(10)              // Trigger vendor notification
   
   // Media
-  images                String[] @default([])              // JSON array of Cloudinary URLs
+  images                Json[] @default([])              // JSON array of Cloudinary URLs
 
   
   // Details
@@ -326,7 +326,7 @@ model Review {
   rating                Int      @db.SmallInt              // 1-5
   comment               String?  @db.Text
   
-  images                String[] @default([])              // Cloudinary URLs
+  
   vendorResponse        String?  @db.Text
   vendorResponseAt      DateTime?
   

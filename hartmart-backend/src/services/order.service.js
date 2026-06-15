@@ -1,18 +1,19 @@
 import OrderRespository from "../repositories/order.respository.js";
 import { nanoid } from "nanoid";
+import AppError from "../utils/AppError.js";
 
 class OrderService {
   static async createOrder(userId, payload) {
     const cartItems = await OrderRespository.getCart(userId);
 
     if (!cartItems.length) {
-      throw new Error("Cart is empty");
+      throw new AppError("Cart is empty", 404);
     }
 
     const address = await OrderRespository.getDefaultAddress(userId);
 
     if (!address) {
-      throw new Error("No default address found");
+      throw new AppError("No default address found", 404);
     }
 
     let subtotal = 0;

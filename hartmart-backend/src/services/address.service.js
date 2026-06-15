@@ -1,4 +1,5 @@
 import AddressRepository from "../repositories/address.respository.js";
+import AppError from "../utils/AppError.js";
 
 class AddressService {
   static async addAddress(userId, data) {
@@ -11,7 +12,7 @@ class AddressService {
       }
 
       if (existingAddresses >= 5) {
-        throw new Error("Maximum address limit reached");
+        throw new AppError("Maximum address limit reached", 404);
       }
       return AddressRepository.create({
         ...data,
@@ -27,15 +28,15 @@ class AddressService {
       const address = await AddressRepository.findById(addressId);
 
       if (!address) {
-        throw new Error("Address not found");
+        throw new AppError("Address not found", 404);
       }
 
       if (!address) {
-        throw new Error("Address not found");
+        throw new AppError("Address not found", 404);
       }
 
       if (address.userId !== userId) {
-        throw new Error("Unauthorized");
+        throw new AppError("Unauthorized", 404);
       }
 
       return AddressRepository.update(addressId, data);
@@ -53,11 +54,11 @@ class AddressService {
       const address = await AddressRepository.findById(addressId);
 
       if (!address) {
-        throw new Error("Address not found");
+        throw new AppError("Address not found", 404);
       }
 
       if (address.userId !== userId) {
-        throw new Error("Unauthorized");
+        throw new AppError("Unauthorized", 404);
       }
 
       await AddressRepository.delete(addressId);

@@ -1,12 +1,13 @@
 import ProductRepository from "../repositories/product.repository.js";
 import WishlistRepository from "../repositories/wishlist.respository.js";
+import AppError from "../utils/AppError.js";
 
 class WishlistService {
   static async addToWishList(userId, productId) {
     const product = await ProductRepository.findbyId(productId);
 
     if (!product) {
-      throw Error("Product not Found");
+      throw new AppError("Product not Found", 404);
     }
 
     const existing = await WishlistRepository.findItem(userId, productId);

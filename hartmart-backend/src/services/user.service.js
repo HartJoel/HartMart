@@ -1,4 +1,5 @@
 import UserRepository from "../repositories/user.repository.js";
+import AppError from "../utils/AppError.js";
 import { uploadAvatarToCloudinary } from "../utils/uploadToCloudinary.js";
 
 class UserService {
@@ -6,7 +7,7 @@ class UserService {
     const user = await UserRepository.findById(userId);
 
     if (!user) {
-      throw new Error("User not found");
+      throw new AppError("User not found", 404);
     }
 
     const { password, ...safeUser } = user;
@@ -21,7 +22,7 @@ class UserService {
       const user = await UserRepository.findById(userId);
 
       if (!user) {
-        throw new Error("User not found");
+        throw new AppError("User not found", 404);
       }
 
       let avatarData = user.avatar;
@@ -51,7 +52,7 @@ class UserService {
     const user = await UserRepository.findById(id);
 
     if (!user) {
-      throw new Error("User not found");
+      throw new AppError("User not found", 404);
     }
 
     const { password, ...result } = user;

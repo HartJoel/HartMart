@@ -1,12 +1,13 @@
 import CartRespository from "../repositories/cart.repository.js";
 import ProductRepository from "../repositories/product.repository.js";
+import AppError from "../utils/AppError.js";
 
 class CartService {
   static async addToCart(userId, data) {
     const product = await ProductRepository.findbyId(data.productId);
 
     if (!product) {
-      throw Error("Product not Found");
+      throw new AppError("Product not Found", 404);
     }
 
     const existing = await CartRespository.findItem(userId, data.productId);

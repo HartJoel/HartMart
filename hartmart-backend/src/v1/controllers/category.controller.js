@@ -1,81 +1,47 @@
 import CategoryService from "../../services/category.service.js";
+import asyncHandler from "../../utils/asyncHandler.js";
 
-const createCategory = async (req, res) => {
-  try {
-    const category = await CategoryService.createCategory(req.body);
+const createCategory = asyncHandler(async (req, res) => {
+  const category = await CategoryService.createCategory(req.body);
 
-    res.status(201).json({
-      success: "true",
-      data: category,
-    });
-  } catch (error) {
-    return res.status(400).json({
-      success: false,
-      error: error.message,
-    });
-  }
-};
+  res.status(201).json({
+    success: "true",
+    data: category,
+  });
+});
 
-const getCategories = async (req, res) => {
-  try {
-    const categories = await CategoryService.list();
+const getCategories = asyncHandler(async (req, res) => {
+  const categories = await CategoryService.list();
 
-    res.status(201).json({
-      success: "true",
-      data: categories,
-    });
-  } catch (error) {
-    return res.status(400).json({
-      success: false,
-      error: error.message,
-    });
-  }
-};
+  res.status(201).json({
+    success: "true",
+    data: categories,
+  });
+});
 
-const getCategory = async (req, res) => {
-  try {
-    const data = await CategoryService.getCategory(req.params.categoryId);
+const getCategory = asyncHandler(async (req, res) => {
+  const data = await CategoryService.getCategory(req.params.categoryId);
 
-    res.status(200).json({
-      success: true,
-      data,
-    });
-  } catch (error) {
-    return res.status(400).json({
-      success: false,
-      error: error.message,
-    });
-  }
-};
+  res.status(200).json({
+    success: true,
+    data,
+  });
+});
 
-const updateCategory = async (req, res) => {
-  try {
-    const data = await CategoryService.update(req.params.categoryId, req.body);
+const updateCategory = asyncHandler(async (req, res) => {
+  const data = await CategoryService.update(req.params.categoryId, req.body);
 
-    res.status(200).json({
-      success: true,
-      data,
-    });
-  } catch (error) {
-    return res.status(400).json({
-      success: false,
-      error: error.message,
-    });
-  }
-};
+  res.status(200).json({
+    success: true,
+    data,
+  });
+});
 
-const deleteCategory = async (req, res) => {
-  try {
-    await CategoryService.delete(req.params.categoryId);
+const deleteCategory = asyncHandler(async (req, res) => {
+  await CategoryService.delete(req.params.categoryId);
 
-    res.status(204).send();
-  } catch (error) {
-    return res.status(400).json({
-      success: false,
-      error: error.message,
-    });
-  }
-};
+  res.status(204).send();
+});
 
 export {
   createCategory,

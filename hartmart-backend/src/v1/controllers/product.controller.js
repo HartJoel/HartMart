@@ -1,7 +1,7 @@
 import ProductService from "../../services/product.service.js";
+import asyncHandler from "../../utils/asyncHandler.js";
 
-const createProduct = async (req, res) => {
-  try {
+const createProduct = asyncHandler(async (req, res) => {
     const product = await ProductService.createProduct(
       req.user.id,
       req.body,
@@ -13,32 +13,18 @@ const createProduct = async (req, res) => {
       message: "Product created successfully",
       data: product,
     });
-  } catch (error) {
-    return res.status(400).json({
-      success: false,
-      error: error.message,
-    });
-  }
-};
+  } )
 
-const getAllProducts = async (req, res) => {
-  try {
+const getAllProducts = asyncHandler(async (req, res) => {
     const products = await ProductService.getAllProducts(req.query);
     return res.status(201).json({
       success: true,
       message: "Get all Products",
       data: products,
     });
-  } catch (error) {
-    return res.status(400).json({
-      success: false,
-      error: error.message,
-    });
-  }
-};
+  } )
 
-const getVendorProducts = async (req, res) => {
-  try {
+const getVendorProducts = asyncHandler(async (req, res) => {
     const vendorProducts = await ProductService.getVendorProduct(
       req.user.id,
       req.query,
@@ -49,16 +35,9 @@ const getVendorProducts = async (req, res) => {
       message: "Vendor Products list",
       data: vendorProducts,
     });
-  } catch (error) {
-    return res.status(400).json({
-      success: false,
-      error: error.message,
-    });
-  }
-};
+  } )
 
-const updateStock = async (req, res) => {
-  try {
+const updateStock = asyncHandler(async (req, res) => {
     const productId = req.params.productId;
 
     const data = await ProductService.updateStock(
@@ -72,16 +51,9 @@ const updateStock = async (req, res) => {
       message: "Updated Stock",
       data: data,
     });
-  } catch (error) {
-    return res.status(400).json({
-      success: false,
-      error: error.message,
-    });
-  }
-};
+  } )
 
-const getLowStock = async (req, res) => {
-  try {
+const getLowStock = asyncHandler(async (req, res) => {
     const data = await ProductService.getLowStockProducts(
       req.user.id,
       req.query,
@@ -92,32 +64,18 @@ const getLowStock = async (req, res) => {
       message: "Low Stocks",
       data: data,
     });
-  } catch (error) {
-    return res.status(400).json({
-      success: false,
-      error: error.message,
-    });
-  }
-};
+  } )
 
-const getProductById = async (req, res) => {
-  try {
+const getProductById = asyncHandler(async (req, res) => {
     const product = await ProductService.getProductById(req.params.productId);
     return res.status(201).json({
       success: "true",
       message: "Product",
       data: product,
     });
-  } catch (error) {
-    return res.status(400).json({
-      success: false,
-      error: error.message,
-    });
-  }
-};
+  } )
 
-const updateProduct = async (req, res) => {
-  try {
+const updateProduct = asyncHandler(async (req, res) => {
     const { id } = req.params;
     const userId = req.user.id;
 
@@ -162,29 +120,16 @@ const updateProduct = async (req, res) => {
       message: "Product updated successfully",
       data: updatedProduct,
     });
-  } catch (error) {
-    return res.status(400).json({
-      success: false,
-      error: error.message,
-    });
-  }
-};
+  } )
 
-const deleteProduct = async (req, res) => {
-  try {
+const deleteProduct = asyncHandler(async (req, res) => {
     const { productId } = req.params;
     const userId = req.user.id;
 
     await ProductService.deleteProduct(productId, userId);
 
     return res.status(204).send();
-  } catch (error) {
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
+  } )
 
 export {
   createProduct,

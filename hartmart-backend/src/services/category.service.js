@@ -1,5 +1,6 @@
 import slugify from "slugify";
 import CategoryRepository from "../repositories/category.responsitory.js";
+import AppError from "../utils/AppError.js";
 
 class CategoryService {
   static async createCategory(data) {
@@ -13,7 +14,7 @@ class CategoryService {
       const parent = await CategoryRepository.findById(data.parentId);
 
       if (!parent) {
-        throw Error("Parent category not found");
+        throw new AppError("Parent category not found", 404);
       }
     }
 

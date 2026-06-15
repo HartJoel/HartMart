@@ -1,73 +1,46 @@
 import WishlistService from "../../services/wishlist.service.js";
+import asyncHandler from "../../utils/asyncHandler.js";
 
-const addToWishList = async (req, res) => {
-  try {
-    const item = await WishlistService.addToWishList(
-      req.user.id,
-      req.body.productId,
-    );
+const addToWishList = asyncHandler(async (req, res) => {
+  const item = await WishlistService.addToWishList(
+    req.user.id,
+    req.body.productId,
+  );
 
-    res.status(201).json({
-      success: true,
-      message: "Add product to wishlist",
-      data: item,
-    });
-  } catch (error) {
-    return res.status(400).json({
-      success: false,
-      error: error.message,
-    });
-  }
-};
+  res.status(201).json({
+    success: true,
+    message: "Add product to wishlist",
+    data: item,
+  });
+});
 
-const getWishlist = async (req, res) => {
-  try {
-    const list = await WishlistService.getWishlist(req.user.id);
+const getWishlist = asyncHandler(async (req, res) => {
+  const list = await WishlistService.getWishlist(req.user.id);
 
-    res.status(201).json({
-      success: true,
-      message: "Get user's wishlist",
-      data: list,
-    });
-  } catch (error) {
-    return res.status(400).json({
-      success: false,
-      error: error.message,
-    });
-  }
-};
+  res.status(201).json({
+    success: true,
+    message: "Get user's wishlist",
+    data: list,
+  });
+});
 
-const removeFromWishlist = async (req, res) => {
-  try {
-    await WishlistService.deleteFromWishlist(req.user.id, req.params.productId);
+const removeFromWishlist = asyncHandler(async (req, res) => {
+  await WishlistService.deleteFromWishlist(req.user.id, req.params.productId);
 
-    return res.status(204).send();
-  } catch (error) {
-    return res.status(400).json({
-      success: false,
-      error: error.message,
-    });
-  }
-};
+  return res.status(204).send();
+});
 
-const checkWishlist = async (req, res) => {
-  try {
-    const result = await WishlistService.checkWishlist(
-      req.user.id,
-      req.params.productId,
-    );
+const checkWishlist = asyncHandler(async (req, res) => {
+  const result = await WishlistService.checkWishlist(
+    req.user.id,
+    req.params.productId,
+  );
 
-    return res.status(200).json({
-      success: true,
-      message: "Check if product in wishlist",
-      data: result,
-    });
-  } catch (error) {
-    return res.status(400).json({
-      success: false,
-      error: error.message,
-    });
-  }
-};
+  return res.status(200).json({
+    success: true,
+    message: "Check if product in wishlist",
+    data: result,
+  });
+});
 
 export { getWishlist, addToWishList, removeFromWishlist, checkWishlist };

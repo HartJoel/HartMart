@@ -5,20 +5,21 @@ import VendorRepository from "../repositories/vendor.responsitory.js";
 import CategoryRepository from "../repositories/category.responsitory.js";
 import { prisma } from "../config/db.js";
 import { uploadProductToCloudinary } from "../utils/uploadToCloudinary.js";
+import AppError from "../utils/AppError.js";
 
 class ProductService {
   static async createProduct(vendorUserId, data, file) {
     const vendor = await VendorRepository.findUserId(vendorUserId);
 
     if (!vendor) {
-      throw Error("Only vendors can create products");
+      throw new AppError("Only vendors can create products", 404);
     }
 
     // FIXED: correct field
     const category = await CategoryRepository.findBySlug(data.categorySlug);
 
     if (!category) {
-      throw Error("Invalid category selected");
+      throw new AppError("Invalid category selected", 404);
     }
 
     let imageData = null;

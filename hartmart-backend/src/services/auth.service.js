@@ -6,6 +6,7 @@ import {
   generateAccessToken,
   generateRefreshToken,
 } from "../utils/generate.token.js";
+import AppError from "../utils/AppError.js";
 
 class AuthService {
   // REGISTER USER
@@ -16,7 +17,7 @@ class AuthService {
       const userExists = await AuthRepository.findUserByEmail(email);
 
       if (userExists) {
-        throw new Error("User with this email already exists");
+        throw new AppError("User with this email already exists", 404);
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -46,7 +47,7 @@ class AuthService {
       const user = await AuthRepository.findEmailToken(token);
 
       if (!user) {
-        throw new Error("Invalid or expired verification token");
+        throw new AppError("Invalid or expired verification token", 404);
       }
 
       const updatedUser = await AuthRepository.verifyEmail(user);
@@ -73,18 +74,18 @@ class AuthService {
       const user = await AuthRepository.findUserByEmail(email);
 
       if (!user) {
-        throw new Error("User doesn't exist");
+        throw new AppError("User doesn't exist", 404);
       }
 
       if (!user.emailVerified) {
-        throw new Error("Email not verified");
+        throw new AppError("Email not verified", 404);
       }
 
       // Compare password
       const isPasswordValid = await bcrypt.compare(password, user.password);
 
       if (!isPasswordValid) {
-        throw new Error("Invalid email or password");
+        throw new AppError("Invalid email or password", 404);
       }
 
       // Generate tokens
@@ -141,7 +142,7 @@ class AuthService {
       const user = await AuthRepository.findPasswordResetToken(token);
 
       if (!user) {
-        throw new Error("Invalid or expired reset token");
+        throw new AppError("Invalid or expired reset token", 404);
       }
 
       const hashedPassword = await bcrypt.hash(newPassword, 10);

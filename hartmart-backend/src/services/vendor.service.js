@@ -10,7 +10,7 @@ class VendorService {
 
     if (existingVendor) {
       if (existingVendor) {
-        throw new Error("You already have a vendor account");
+        throw new AppError("You already have a vendor account", 404);
       }
     }
 
@@ -19,10 +19,10 @@ class VendorService {
     const existingStore = await VendorRepository.findByStoreSlug(storeSlug);
 
     if (existingStore) {
-      throw new Error("Store name already exists");
+      throw new AppError("Store name already exists", 404);
     }
 
-    await UserRepository.upadateRole(userId)
+    await UserRepository.upadateRole(userId);
 
     return await VendorRepository.create({
       userId,

@@ -19,6 +19,32 @@ class OrderRespository {
     });
   }
 
+  static async getVendorOrders(vendorId) {
+    return prisma.order.findMany({
+      where: {
+        items: {
+          some: {
+            vendorId,
+          },
+        },
+      },
+      include: {
+        items: {
+          where: {
+            vendorId,
+          },
+        },
+      },
+    });
+  }
+
+  static async updateStatus(orderId, status) {
+    return prisma.order.update({
+      where: { id: orderId },
+      data: { status },
+    });
+  }
+
   static async findById(orderId) {
     return prisma.order.findUnique({
       where: { id: orderId },

@@ -9,6 +9,12 @@ class VendorRepository {
     });
   }
 
+  static async findById(vendorId) {
+    return prisma.vendor.findUnique({
+      where: { id: vendorId },
+    });
+  }
+
   static async findByStoreSlug(storeSlug) {
     return prisma.vendor.findUnique({
       where: {

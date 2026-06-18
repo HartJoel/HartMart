@@ -15,6 +15,7 @@ import cartRoutes from "./v1/routes/cart.route.js";
 import wishLists from "./v1/routes/wishlist.route.js";
 import orderRoutes from "./v1/routes/order.route.js";
 import reviewRoutes from "./v1/routes/review.route.js";
+import notificationRoutes from "./v1/routes/notification.route.js";
 import errorMiddleware from "./v1/middleware/error.middleware.js";
 
 config();
@@ -38,6 +39,7 @@ app.use("/v1/carts", cartRoutes);
 app.use("/v1/wishlists", wishLists);
 app.use("/v1/orders", orderRoutes);
 app.use("/v1/reviews", reviewRoutes);
+app.use("/v1/notification", notificationRoutes);
 
 app.use(errorMiddleware);
 

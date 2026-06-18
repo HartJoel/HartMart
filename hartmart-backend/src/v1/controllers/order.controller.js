@@ -37,4 +37,13 @@ const getUserOrders = asyncHandler(async (req, res) => {
   });
 });
 
-export { createOrder, getTimeline, getOrder, getUserOrders };
+const getVendorOrders = asyncHandler(async (req, res) => {
+  const orders = await OrderService.getVendorOrders(req.user.id);
+
+  return res.status(200).json({
+    success: true,
+    data: orders,
+  });
+});
+
+export { createOrder, getTimeline, getOrder, getUserOrders, getVendorOrders };

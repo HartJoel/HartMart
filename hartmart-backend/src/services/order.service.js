@@ -1,6 +1,8 @@
 import OrderRespository from "../repositories/order.respository.js";
 import { nanoid } from "nanoid";
 import AppError from "../utils/AppError.js";
+import VendorRepository from "../repositories/vendor.responsitory.js";
+import NotificationService from "./notification.service.js";
 
 class OrderService {
   static async createOrder(userId, payload) {
@@ -72,6 +74,46 @@ class OrderService {
 
     await OrderRespository.clearCart(userId);
 
+    // 1. Notify CUSTOMER
+    await NotificationService.create({
+      userId,
+      type: "ORDER_CREATED",
+      title: "Order placed successfully",
+      message: `Your order ${order.orderNumber} has been placed.`,
+      actionUrl: `/orders/${order.id}`,
+      metadata: {
+        orderId: order.id,
+      },
+    });
+
+    const vendorIds = new Set();
+
+    for (const item of orderItems) {
+      if (item.vendorId) {
+        vendorIds.add(item.vendorId);
+      }
+    }
+
+    console.log("ORDER ITEMS:", cartItems);
+
+    // 2. Notify VENDORS
+    for (const item of orderItems) {
+      const vendor = await VendorRepository.findById(item.vendorId);
+
+      console.log("VENDOR LOOKUP:", vendor);
+
+      await NotificationService.create({
+        userId: vendor.userId,
+        type: "NEW_ORDER",
+        title: "New Order Received",
+        message: "You have received a new order.",
+        actionUrl: `/vendor/orders/${order.id}`,
+        metadata: {
+          orderId: order.id,
+        },
+      });
+    }
+
     return order;
   }
 
@@ -79,12 +121,22 @@ class OrderService {
     return await OrderRespository.getTimeline(orderId);
   }
 
-   static async getOrder(orderId) {
+  static async getOrder(orderId) {
     return await OrderRespository.findById(orderId);
   }
 
-   static async getUserOrders(userId) {
+  static async getUserOrders(userId) {
     return await OrderRespository.findByCustomer(userId);
+  }
+
+  static async getVendorOrders(userId) {
+    const vendor = await VendorRepository.findUserId(userId);
+
+    return await OrderRespository.getVendorOrders(vendor.id);
+  }
+
+  static async updateOrderStatus(orderId, status) {
+    return OrderRespository.updateStatus(orderId, status);
   }
 }
 

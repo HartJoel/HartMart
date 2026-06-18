@@ -66,6 +66,18 @@ enum OrderItemStatus {
   CANCELLED
 }
 
+enum NotificationType {
+  ORDER_CREATED
+  NEW_ORDER
+  ORDER_SHIPPED
+  ORDER_DELIVERED
+  PAYMENT_RECEIVED
+  PAYMENT_FAILED
+  VENDOR_VERIFIED
+  REVIEW_POSTED
+  REVIEW_RESPONSE
+}
+
 // ============================================================================
 // CORE USER DOMAIN
 // ============================================================================
@@ -100,6 +112,7 @@ model User {
   refreshTokens RefreshToken[]
   orders                Order[]
   reviews               Review[]
+  notifications         Notification[]
 
 }
 
@@ -446,4 +459,30 @@ model OrderTimeline {
 
   @@index([orderId])
   @@index([status])
+}
+
+// ============================================================================
+// NOTIFICATION SYSTEM
+// ============================================================================
+model Notification {
+  id         String   @id @default(cuid())
+
+  userId     String
+  user       User @relation(fields: [userId], references: [id])
+
+  type       NotificationType
+
+  title      String
+  message    String
+
+  actionUrl  String?
+
+  isRead     Boolean @default(false)
+  readAt     DateTime?
+
+  metadata   Json?
+
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
 }

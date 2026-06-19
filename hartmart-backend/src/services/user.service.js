@@ -60,10 +60,25 @@ class UserService {
     return result;
   }
 
-  static async getAllUsers() {
-    const users = await UserRepository.findAll();
+  static async getAllUsers(query) {
+    const result = await UserRepository.findAll(query);
 
-    return users.map(({ password, ...user }) => user);
+    const users = result.data ?? result;
+
+    const formattedUsers = users.map((user) => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar,
+      role: user.role,
+      emailVerified: user.emailVerified,
+      status: user.status,
+    }));
+
+    return {
+      data: formattedUsers,
+      pagination: result.pagination,
+    };
   }
 }
 

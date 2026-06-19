@@ -1,4 +1,5 @@
 import { prisma } from "../config/db.js";
+import QueryBuilder from "../utils/queryBuilder.js";
 
 class UserRepository {
   static async findById(id) {
@@ -17,19 +18,22 @@ class UserRepository {
     });
   }
 
-  static async upadateRole(userId){
+  static async upadateRole(userId) {
     return prisma.user.update({
-      where: {id: userId},
-      data:{
-        role: "VENDOR"
-      }
-    })
+      where: { id: userId },
+      data: {
+        role: "VENDOR",
+      },
+    });
   }
 
-  static async findAll() {
-    return prisma.user.findMany({
-      orderBy: { createdAt: "desc" },
-    });
+  static async findAll(query) {
+    return new QueryBuilder(prisma.user, query)
+      .search(["name"])
+      .filter()
+      .sort()
+      .paginate()
+      .exec();
   }
 }
 

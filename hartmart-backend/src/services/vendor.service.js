@@ -48,6 +48,60 @@ class VendorService {
       bankCode: data.bankCode,
     });
   }
+
+  static async getVendorProfile(vendorId) {
+    return VendorRepository.findById(vendorId);
+  }
+
+  static async getMyVendorProfile(userId) {
+    return VendorRepository.findUserId(userId);
+  }
+
+  static async updateVendorProfile(userId, data) {
+    const vendor = await VendorRepository.findUserId(userId);
+
+    return VendorRepository.updateVendor(vendor.id, data);
+  }
+
+  static async getAllVendors() {
+    return VendorRepository.getAllVendors();
+  }
+
+  static async verifyVendor(vendorId) {
+    return VendorRepository.verifyVendor(vendorId);
+  }
+
+  static async rejectVendor(vendorId, reason) {
+    return VendorRepository.rejectVendor(vendorId, reason);
+  }
+
+  static async suspendVendor(vendorId) {
+    return VendorRepository.suspendVendor(vendorId);
+  }
+
+  static async getVendorAnalytics(userId) {
+    const vendor = await VendorRepository.findUserId(userId);
+
+    // Build analytics later
+    return {
+      vendorId: vendor.id,
+      totalSales: 0,
+      totalRevenue: 0,
+      averageOrderValue: 0,
+      fulfillmentRate: 0,
+      cancellationRate: 0,
+      returnRate: 0,
+      monthlyData: [],
+    };
+  }
+
+  static async getVendorMetrics(vendorId) {
+    return VendorRepository.getVendorMetrics(vendorId);
+  }
+
+  static async getTopVendors() {
+    return VendorRepository.getTopVendors();
+  }
 }
 
 export default VendorService;

@@ -69,8 +69,27 @@ class ProductService {
   }
 
   static async getAllProducts(query) {
-    const products = await ProductRepository.getProducts(query);
-    return products;
+    const result = await ProductRepository.getProducts(query);
+
+    const products = result.data ?? result;
+
+    return {
+      data: products.map((product) => ({
+        id: product.id,
+        name: product.name,
+        slug: product.slug,
+        basePrice: product.basePrice,
+        discountPrice: product.discountPrice,
+        currency: product.currency,
+        images: product.images,
+        averageRating: product.averageRating,
+        status: product.status,
+        availableStock: product.availableStock,
+        vendorId: product.vendorId,
+        categoryId: product.categoryId,
+      })),
+      pagination: result.pagination,
+    };
   }
 
   static async getProductById(id) {

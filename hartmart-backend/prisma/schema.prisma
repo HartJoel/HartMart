@@ -357,6 +357,15 @@ model Review {
   @@index([rating])
 }
 
+model ReviewHelpful {
+  id        String @id @default(cuid())
+  reviewId  String
+  userId    String
+  createdAt DateTime @default(now())
+
+  @@unique([reviewId, userId]) 
+}
+
 // ============================================================================
 // ORDER DOMAIN
 // ============================================================================

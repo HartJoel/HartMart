@@ -7,17 +7,22 @@ import {
   generateRefreshToken,
 } from "../utils/generate.token.js";
 import AppError from "../utils/AppError.js";
+import logger from "../utils/logger.js";
 
 class AuthService {
   // REGISTER USER
   static async register(data) {
-    try {
-      const { name, email, password } = data;
+    const { name, email, password } = data;
+    logger.info("Registration attempt", { email });
 
+    try {
       const userExists = await AuthRepository.findUserByEmail(email);
 
       if (userExists) {
-        throw new AppError("User with this email already exists", 404);
+        logger.warn("Registration failed - email already exists", {
+          email,
+        });
+        throw new AppError("User with this email already exists", 409);
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -36,8 +41,19 @@ class AuthService {
         emailVerificationTokenExpires,
       });
 
+      logger.info("User registered successfully", {
+        userId: user.id,
+        email,
+      });
+
       return { user };
     } catch (error) {
+      logger.error("Registration error", {
+        email,
+        error: error.message,
+        stack: error.stack,
+      });
+
       throw error;
     }
   }

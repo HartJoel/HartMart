@@ -3,20 +3,19 @@ import winston from "winston";
 const logger = winston.createLogger({
   level: "info",
 
+//   format: winston.format.combine(
+//     winston.format.timestamp(),
+//     winston.format.printf(({ level, message, timestamp }) => {
+//       return `[${timestamp}] ${level.toUpperCase()}: ${message}`;
+//     }),
+//   ),
+
+//   PRODUCTION
   format: winston.format.combine(
     winston.format.timestamp(),
-
-    winston.format.printf(({ level, message, timestamp }) => {
-      return `[${timestamp}] ${level.toUpperCase()}: ${message}`;
-    }),
+    winston.format.errors({ stack: true }),
+    winston.format.json(),
   ),
-
-  // PRODUCTION
-  // format: winston.format.combine(
-  //   winston.format.timestamp(),
-  //   winston.format.errors({ stack: true }),
-  //   winston.format.json(),
-  // ),
 
   transports: [
     new winston.transports.Console(),
@@ -27,7 +26,7 @@ const logger = winston.createLogger({
     }),
 
     new winston.transports.File({
-      filename: "logs/combined.log",
+      filename: "logs/app.log",
     }),
   ],
 });

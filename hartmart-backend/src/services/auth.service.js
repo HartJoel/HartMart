@@ -13,24 +13,35 @@ class AuthService {
   // REGISTER USER
   static async register(data) {
     const { name, email, password } = data;
+
     logger.info("Registration attempt", { email });
 
     try {
+      console.time("REGISTER TOTAL");
+
+      console.time("DB - FIND USER");
       const userExists = await AuthRepository.findUserByEmail(email);
+      console.timeEnd("DB - FIND USER");
 
       if (userExists) {
-        logger.warn("Registration failed - email already exists", {
-          email,
-        });
         throw new AppError("User with this email already exists", 409);
       }
 
+      console.time("BCRYPT HASH");
       const hashedPassword = await bcrypt.hash(password, 10);
-      // Generate email verification token (valid for 24 hours)
+      console.timeEnd("BCRYPT HASH");
+
+      console.time("CRYPTO TOKEN");
+
       const emailVerificationToken = crypto.randomBytes(32).toString("hex");
+
       const emailVerificationTokenExpires = new Date(
         Date.now() + 24 * 60 * 60 * 1000,
       );
+
+      console.timeEnd("CRYPTO TOKEN");
+
+      console.time("DB - CREATE USER");
 
       const user = await AuthRepository.createUser({
         name,
@@ -41,18 +52,19 @@ class AuthService {
         emailVerificationTokenExpires,
       });
 
-      logger.info("User registered successfully", {
-        userId: user.id,
-        email,
-      });
+      console.timeEnd("DB - CREATE USER");
+
+      console.timeEnd("REGISTER TOTAL");
 
       return { user };
     } catch (error) {
-      logger.error("Registration error", {
-        email,
-        error: error.message,
-        stack: error.stack,
-      });
+      if (!(error instanceof AppError)) {
+        logger.error("Unexpected registration error", {
+          email,
+          error: error.message,
+          stack: error.stack,
+        });
+      }
 
       throw error;
     }

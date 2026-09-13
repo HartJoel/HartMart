@@ -3,7 +3,7 @@ export default class QueryBuilder {
     this.model = model;
     this.query = query;
 
-    this.where = { deletedAt: null };
+    // this.where = { deletedAt: null };
     this.orderBy = {};
     this.skip = 0;
     this.take = 10;

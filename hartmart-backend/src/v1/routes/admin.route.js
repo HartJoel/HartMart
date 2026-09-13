@@ -12,5 +12,6 @@ router.get("/dashboard", AdminController.getDashboardAnalytics);
 router.get("/reports", AdminController.getPlatformReports);
 router.get("/users", AdminController.getUsers);
 router.get("/logs", AdminController.getAuditLogs);
+router.get("/export", AdminController.exportData);
 
 export default router;

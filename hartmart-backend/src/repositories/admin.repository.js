@@ -109,6 +109,172 @@ class AdminRepository {
       .paginate()
       .exec();
   }
+
+  static async getOrdersForExport({ startDate, endDate }) {
+    const where = {};
+
+    if (startDate || endDate) {
+      where.createdAt = {};
+
+      if (startDate) {
+        where.createdAt.gte = new Date(startDate);
+      }
+
+      if (endDate) {
+        where.createdAt.lte = new Date(endDate);
+      }
+    }
+
+    return prisma.order.findMany({
+      where,
+
+      select: {
+        id: true,
+        orderNumber: true,
+        customerId: true,
+        status: true,
+
+        subtotal: true,
+        taxAmount: true,
+        shippingCost: true,
+        discountAmount: true,
+        totalAmount: true,
+
+        createdAt: true,
+        confirmedAt: true,
+        shippedAt: true,
+        deliveredAt: true,
+        cancelledAt: true,
+      },
+
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+  }
+
+  static async getUsersForExport({ startDate, endDate }) {
+    const where = {};
+
+    if (startDate || endDate) {
+      where.createdAt = {};
+
+      if (startDate) {
+        where.createdAt.gte = new Date(startDate);
+      }
+
+      if (endDate) {
+        where.createdAt.lte = new Date(endDate);
+      }
+    }
+
+    return prisma.user.findMany({
+      where,
+
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        status: true,
+        emailVerified: true,
+        createdAt: true,
+      },
+
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+  }
+
+  static async getVendorsForExport({ startDate, endDate }) {
+    const where = {};
+
+    if (startDate || endDate) {
+      where.createdAt = {};
+
+      if (startDate) {
+        where.createdAt.gte = new Date(startDate);
+      }
+
+      if (endDate) {
+        where.createdAt.lte = new Date(endDate);
+      }
+    }
+
+    return prisma.vendor.findMany({
+      where,
+
+      select: {
+        id: true,
+        storeName: true,
+        storeSlug: true,
+        storeCategory: true,
+        status: true,
+        averageRating: true,
+        totalReviews: true,
+        bankVerified: true,
+        createdAt: true,
+      },
+
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+  }
+
+  static async getProductsForExport({ startDate, endDate }) {
+    const where = {};
+
+    if (startDate || endDate) {
+      where.createdAt = {};
+
+      if (startDate) {
+        where.createdAt.gte = new Date(startDate);
+      }
+
+      if (endDate) {
+        where.createdAt.lte = new Date(endDate);
+      }
+    }
+
+    return prisma.product.findMany({
+      where,
+
+      select: {
+        id: true,
+        sku: true,
+        name: true,
+        basePrice: true,
+        discountPrice: true,
+        currency: true,
+        totalStock: true,
+        availableStock: true,
+        status: true,
+        isApproved: true,
+        isPublished: true,
+        averageRating: true,
+        reviewCount: true,
+        createdAt: true,
+
+        vendor: {
+          select: {
+            storeName: true,
+          },
+        },
+
+        category: {
+          select: {
+            name: true,
+          },
+        },
+      },
+
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+  }
 }
 
 export default AdminRepository;

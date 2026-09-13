@@ -504,27 +504,20 @@ model Notification {
 // AUDITING & COMPLIANCE
 // ============================================================================
 model AuditLog {
-  id String @id @default(cuid())
+  id          String   @id @default(cuid())
 
-  userId String?
-  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull, map: "AuditLog_userId_user_fkey")
-  vendor Vendor? @relation(fields: [userId], references: [id], onDelete: Cascade, map: "AuditLog_userId_vendor_fkey")
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
-  action     AuditAction
-  resource   String      @db.VarChar(100)
-  resourceId String?
+  vendorId    String?
+  vendor      Vendor?  @relation(fields: [vendorId], references: [id], onDelete: SetNull)
 
-  description String? @db.Text
+  action      AuditAction
+  resource    String
+  resourceId  String?
+  description String?
   metadata    Json?
-
-  ipAddress String? @db.VarChar(100)
-  userAgent String? @db.Text
-
-  createdAt DateTime @default(now())
-
-  @@index([userId])
-  @@index([action])
-  @@index([resource])
-  @@index([createdAt])
-  @@index([resource, action])
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
 }

@@ -6,16 +6,16 @@ import CategoryRepository from "../repositories/category.responsitory.js";
 import { prisma } from "../config/db.js";
 import { uploadProductToCloudinary } from "../utils/uploadToCloudinary.js";
 import AppError from "../utils/AppError.js";
+import AuditService from "./audit.service.js";
 
 class ProductService {
-  static async createProduct(vendorUserId, data, file) {
+  static async createProduct(vendorUserId, data, file, context = {}) {
     const vendor = await VendorRepository.findUserId(vendorUserId);
 
     if (!vendor) {
       throw new AppError("Only vendors can create products", 404);
     }
 
-    // FIXED: correct field
     const category = await CategoryRepository.findBySlug(data.categorySlug);
 
     if (!category) {
@@ -42,30 +42,39 @@ class ProductService {
 
     const slug = `${baseSlug}-${crypto.randomBytes(2).toString("hex")}`;
 
-    return await ProductRepository.create({
+    const product = await ProductRepository.create({
       vendorId: vendor.id,
       name: data.name,
       description: data.description,
-
       categoryId: category.id,
-
       sku,
       slug,
-
       basePrice: Number(data.basePrice),
       discountPrice: Number(data.discountPrice),
-
       totalStock: Number(data.totalStock),
       availableStock: Number(data.totalStock),
       reorderLevel: Number(data.reorderLevel),
-
       weight: data.weight ? Number(data.weight) : null,
-
       images: imageData ? [imageData] : [],
-
       dimensions: data.dimensions,
       attributes: data.attributes,
     });
+
+    await AuditService.log({
+      userId: vendorUserId, 
+      vendorId: vendor.id, 
+      action: "CREATE",
+      resource: "product",
+      resourceId: product.id,
+      description: "Product created",
+      metadata: {
+        productName: product.name,
+      },
+      ipAddress: context.ipAddress,
+      userAgent: context.userAgent,
+    });
+
+    return product;
   }
 
   static async getAllProducts(query) {

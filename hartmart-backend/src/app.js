@@ -18,6 +18,7 @@ import reviewRoutes from "./v1/routes/review.route.js";
 import healthRoutes from "./v1/routes/health.routes.js";
 import notificationRoutes from "./v1/routes/notification.route.js";
 import errorMiddleware from "./v1/middleware/error.middleware.js";
+import adminRoutes from "./v1/routes/admin.route.js";
 
 config();
 connectDB();
@@ -41,6 +42,7 @@ app.use("/v1/wishlists", wishLists);
 app.use("/v1/orders", orderRoutes);
 app.use("/v1/reviews", reviewRoutes);
 app.use("/v1/notification", notificationRoutes);
+app.use("/v1/admin", adminRoutes);
 app.use("/api", healthRoutes);
 
 app.use(errorMiddleware);

@@ -6,10 +6,14 @@ const createProduct = asyncHandler(async (req, res) => {
     req.user.id,
     req.body,
     req.file,
+    {
+      ipAddress: req.ip,
+      userAgent: req.get("user-agent"),
+    },
   );
 
   return res.status(201).json({
-    success: "true",
+    success: true,
     message: "Product created successfully",
     data: product,
   });

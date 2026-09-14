@@ -4,21 +4,21 @@ import { config } from "dotenv";
 import { connectDB, disconnectDB } from "./config/db.js";
 
 // Import Routes
-import authRoutes from "./v1/routes/auth.routes.js";
-import userRoutes from "./v1/routes/user.routes.js";
-import refreshRoutes from "./v1/routes/refresh.routes.js";
-import addressRoutes from "./v1/routes/address.route.js";
-import vendorRoutes from "./v1/routes/vendor.route.js";
-import categoryRoutes from "./v1/routes/category.route.js";
-import productRoutes from "./v1/routes/product.route.js";
-import cartRoutes from "./v1/routes/cart.route.js";
-import wishLists from "./v1/routes/wishlist.route.js";
-import orderRoutes from "./v1/routes/order.route.js";
-import reviewRoutes from "./v1/routes/review.route.js";
-import healthRoutes from "./v1/routes/health.routes.js";
-import notificationRoutes from "./v1/routes/notification.route.js";
-import errorMiddleware from "./v1/middleware/error.middleware.js";
-import adminRoutes from "./v1/routes/admin.route.js";
+import authRoutes from "./modules/auth/auth.routes.js";
+import userRoutes from "./modules/auth/user.routes.js";
+import refreshRoutes from "./modules/auth/refresh.routes.js";
+import addressRoutes from "./modules/address/address.routes.js";
+import vendorRoutes from "./modules/vendor/vendor.routes.js";
+import categoryRoutes from "./modules/category/category.routes.js";
+import productRoutes from "./modules/product/product.routes.js";
+import cartRoutes from "./modules/cart/cart.routes.js";
+import wishLists from "./modules/wishlist/wishlist.routes.js";
+import orderRoutes from "./modules/order/order.routes.js";
+import reviewRoutes from "./modules/review/review.routes.js";
+import healthRoutes from "./modules/health/health.routes.js";
+import notificationRoutes from "./modules/notification/notification.routes.js";
+import errorMiddleware from "./shared/middleware/error.middleware.js";
+import adminRoutes from "./modules/admin/admin.routes.js";
 
 config();
 connectDB();

@@ -3,7 +3,13 @@ import asyncHandler from "../../utils/asyncHandler.js";
 import { setAuthCookies } from "../../utils/generate.token.js";
 
 const register = asyncHandler(async (req, res) => {
-  const { user } = await AuthService.register(req.body);
+  const requestMeta = {
+    userId: req.user?.id,
+    ip: req.ip,
+    userAgent: req.get("User-Agent"),
+  };
+
+  const { user } = await AuthService.register(req.body, requestMeta);
 
   return res.status(201).json({
     success: true,
@@ -24,13 +30,19 @@ const register = asyncHandler(async (req, res) => {
 const verifyEmail = asyncHandler(async (req, res) => {
   const { token } = req.query;
 
+  const requestMeta = {
+    userId: req.user?.id,
+    ip: req.ip,
+    userAgent: req.get("User-Agent"),
+  };
+
   if (!token) {
     return res.status(400).json({
       success: false,
       error: "Verification token is required",
     });
   }
-  const result = await AuthService.verifyEmail(token);
+  const result = await AuthService.verifyEmail(token, requestMeta);
 
   return res.status(200).json({
     success: true,
@@ -42,7 +54,16 @@ const verifyEmail = asyncHandler(async (req, res) => {
 });
 
 const login = asyncHandler(async (req, res) => {
-  const { user, accessToken, refreshToken } = await AuthService.login(req.body);
+  const requestMeta = {
+    userId: req.user?.id,
+    ip: req.ip,
+    userAgent: req.get("User-Agent"),
+  };
+
+  const { user, accessToken, refreshToken } = await AuthService.login(
+    req.body,
+    requestMeta,
+  );
 
   // Set cookies in response
   setAuthCookies(res, accessToken, refreshToken);
@@ -65,7 +86,14 @@ const login = asyncHandler(async (req, res) => {
 
 const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
-  const result = await AuthService.forgotPassword(email);
+
+  const requestMeta = {
+    userId: req.user?.id,
+    ip: req.ip,
+    userAgent: req.get("User-Agent"),
+  };
+
+  const result = await AuthService.forgotPassword(email, requestMeta);
 
   return res.status(200).json({
     success: true,
@@ -77,7 +105,14 @@ const forgotPassword = asyncHandler(async (req, res) => {
 const resetPassword = asyncHandler(async (req, res) => {
   const { token } = req.query;
   const { password } = req.body;
-  const result = await AuthService.resetPassword(token, password);
+
+  const requestMeta = {
+    userId: req.user?.id,
+    ip: req.ip,
+    userAgent: req.get("User-Agent"),
+  };
+
+  const result = await AuthService.resetPassword(token, password, requestMeta);
 
   return res.status(200).json({
     success: true,

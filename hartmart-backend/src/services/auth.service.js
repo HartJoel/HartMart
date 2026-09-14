@@ -11,10 +11,16 @@ import logger from "../utils/logger.js";
 
 class AuthService {
   // REGISTER USER
-  static async register(data) {
-    const { name, email, password } = data;
+  static async register(data, requestMeta = {}) {
+    const { name, email } = data;
 
-    logger.info("Registration attempt", { email });
+    logger.info("Registration attempt", {
+      email,
+      userId: requestMeta.userId,
+      ip: requestMeta.ip,
+      userAgent: requestMeta.userAgent,
+      timestamp: new Date(),
+    });
 
     try {
       console.time("REGISTER TOTAL");
@@ -24,11 +30,18 @@ class AuthService {
       console.timeEnd("DB - FIND USER");
 
       if (userExists) {
+        logger.warn("Registration failed - email already exists", {
+          email,
+          ip: requestMeta.ip,
+          userAgent: requestMeta.userAgent,
+          timestamp: new Date(),
+        });
+
         throw new AppError("User with this email already exists", 409);
       }
 
       console.time("BCRYPT HASH");
-      const hashedPassword = await bcrypt.hash(password, 10);
+      const hashedPassword = await bcrypt.hash(data.password, 10);
       console.timeEnd("BCRYPT HASH");
 
       console.time("CRYPTO TOKEN");
@@ -53,8 +66,15 @@ class AuthService {
       });
 
       console.timeEnd("DB - CREATE USER");
-
       console.timeEnd("REGISTER TOTAL");
+
+      logger.info("User registered", {
+        userId: user.id,
+        email: user.email,
+        timestamp: new Date(),
+        ip: requestMeta.ip,
+        userAgent: requestMeta.userAgent,
+      });
 
       return { user };
     } catch (error) {
@@ -63,6 +83,9 @@ class AuthService {
           email,
           error: error.message,
           stack: error.stack,
+          ip: requestMeta.ip,
+          userAgent: requestMeta.userAgent,
+          timestamp: new Date(),
         });
       }
 
@@ -70,15 +93,30 @@ class AuthService {
     }
   }
 
-  static async verifyEmail(token) {
+  // VERIFY EMAIL
+  static async verifyEmail(token, requestMeta = {}) {
     try {
       const user = await AuthRepository.findEmailToken(token);
 
       if (!user) {
+        logger.warn("Email verification failed - invalid or expired token", {
+          ip: requestMeta.ip,
+          userAgent: requestMeta.userAgent,
+          timestamp: new Date(),
+        });
+
         throw new AppError("Invalid or expired verification token", 404);
       }
 
       const updatedUser = await AuthRepository.verifyEmail(user);
+
+      logger.info("Email verified", {
+        userId: updatedUser.id,
+        email: updatedUser.email,
+        timestamp: new Date(),
+        ip: requestMeta.ip,
+        userAgent: requestMeta.userAgent,
+      });
 
       return {
         success: true,
@@ -95,34 +133,75 @@ class AuthService {
     }
   }
 
-  static async login(data) {
-    try {
-      const { email, password } = data;
+  // LOGIN USER
+  static async login(data, requestMeta = {}) {
+    const { email } = data;
 
+    logger.info("Login attempt", {
+      email,
+      ip: requestMeta.ip,
+      userAgent: requestMeta.userAgent,
+      timestamp: new Date(),
+    });
+
+    try {
       const user = await AuthRepository.findUserByEmail(email);
 
       if (!user) {
+        logger.warn("Login failed - user not found", {
+          email,
+          ip: requestMeta.ip,
+          userAgent: requestMeta.userAgent,
+          timestamp: new Date(),
+        });
+
         throw new AppError("User doesn't exist", 404);
       }
 
       if (!user.emailVerified) {
+        logger.warn("Login failed - email not verified", {
+          userId: user.id,
+          email: user.email,
+          ip: requestMeta.ip,
+          userAgent: requestMeta.userAgent,
+          timestamp: new Date(),
+        });
+
         throw new AppError("Email not verified", 404);
       }
 
-      // Compare password
-      const isPasswordValid = await bcrypt.compare(password, user.password);
+      const isPasswordValid = await bcrypt.compare(
+        data.password,
+        user.password,
+      );
 
       if (!isPasswordValid) {
+        logger.warn("Login failed - invalid password", {
+          userId: user.id,
+          email: user.email,
+          ip: requestMeta.ip,
+          userAgent: requestMeta.userAgent,
+          timestamp: new Date(),
+        });
+
         throw new AppError("Invalid email or password", 404);
       }
 
-      // Generate tokens
       const accessToken = generateAccessToken(user.id, user.role);
       const refreshToken = generateRefreshToken(user.id);
 
-      AuthRepository.createRefreshToken(refreshToken, user);
+      await AuthRepository.createRefreshToken(refreshToken, user);
 
       delete user.password;
+
+      logger.info("User logged in", {
+        userId: user.id,
+        email: user.email,
+        role: user.role,
+        timestamp: new Date(),
+        ip: requestMeta.ip,
+        userAgent: requestMeta.userAgent,
+      });
 
       return {
         user,
@@ -130,30 +209,63 @@ class AuthService {
         refreshToken,
       };
     } catch (error) {
+      if (!(error instanceof AppError)) {
+        logger.error("Unexpected login error", {
+          email,
+          error: error.message,
+          stack: error.stack,
+          ip: requestMeta.ip,
+          userAgent: requestMeta.userAgent,
+          timestamp: new Date(),
+        });
+      }
+
       throw error;
     }
   }
 
-  static async forgotPassword(email) {
+  // FORGOT PASSWORD
+  static async forgotPassword(email, requestMeta = {}) {
+    logger.info("Password reset requested", {
+      email,
+      ip: requestMeta.ip,
+      userAgent: requestMeta.userAgent,
+      timestamp: new Date(),
+    });
+
     try {
       const user = await AuthRepository.findUserByEmail(email);
 
       if (!user) {
+        logger.warn("Password reset requested for unknown email", {
+          email,
+          ip: requestMeta.ip,
+          userAgent: requestMeta.userAgent,
+          timestamp: new Date(),
+        });
+
         return {
           success: true,
           message: "If an account exists, password reset email will be sent",
         };
       }
 
-      // Generate password reset token (valid for 1 hour)
       const passwordResetToken = crypto.randomBytes(32).toString("hex");
       const passwordResetTokenExpires = new Date(Date.now() + 60 * 60 * 1000);
 
-      AuthRepository.forgetPassword(
+      await AuthRepository.forgetPassword(
         user,
         passwordResetToken,
         passwordResetTokenExpires,
       );
+
+      logger.info("Password reset token created", {
+        userId: user.id,
+        email: user.email,
+        timestamp: new Date(),
+        ip: requestMeta.ip,
+        userAgent: requestMeta.userAgent,
+      });
 
       return {
         success: true,
@@ -161,27 +273,63 @@ class AuthService {
         passwordResetToken,
       };
     } catch (error) {
+      if (!(error instanceof AppError)) {
+        logger.error("Unexpected password reset request error", {
+          email,
+          error: error.message,
+          stack: error.stack,
+          ip: requestMeta.ip,
+          userAgent: requestMeta.userAgent,
+          timestamp: new Date(),
+        });
+      }
+
       throw error;
     }
   }
 
-  static async resetPassword(token, newPassword) {
+  // RESET PASSWORD
+  static async resetPassword(token, newPassword, requestMeta = {}) {
     try {
       const user = await AuthRepository.findPasswordResetToken(token);
 
       if (!user) {
+        logger.warn("Password reset failed - invalid or expired token", {
+          ip: requestMeta.ip,
+          userAgent: requestMeta.userAgent,
+          timestamp: new Date(),
+        });
+
         throw new AppError("Invalid or expired reset token", 404);
       }
 
       const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-      AuthRepository.updatePassword(user, hashedPassword);
+      await AuthRepository.updatePassword(user, hashedPassword);
+
+      logger.info("Password reset successful", {
+        userId: user.id,
+        email: user.email,
+        timestamp: new Date(),
+        ip: requestMeta.ip,
+        userAgent: requestMeta.userAgent,
+      });
 
       return {
         success: true,
         message: "Password reset successfully. Please login with new password.",
       };
     } catch (error) {
+      if (!(error instanceof AppError)) {
+        logger.error("Unexpected password reset error", {
+          error: error.message,
+          stack: error.stack,
+          ip: requestMeta.ip,
+          userAgent: requestMeta.userAgent,
+          timestamp: new Date(),
+        });
+      }
+
       throw error;
     }
   }

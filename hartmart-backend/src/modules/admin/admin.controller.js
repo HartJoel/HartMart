@@ -4,7 +4,13 @@ import asyncHandler from "../../shared/utils/asyncHandler.js";
 
 class AdminController {
   static getDashboardAnalytics = asyncHandler(async (req, res) => {
-    const analytics = await AdminService.getDashboardAnalytics();
+    const requestMeta = {
+      userId: req.user?.id,
+      ip: req.ip,
+      userAgent: req.get("User-Agent"),
+    };
+
+    const analytics = await AdminService.getDashboardAnalytics(requestMeta);
 
     return res.status(200).json({
       success: true,
@@ -14,7 +20,16 @@ class AdminController {
   });
 
   static getPlatformReports = asyncHandler(async (req, res) => {
-    const report = await AdminService.getPlatformReports(req.query);
+    const requestMeta = {
+      userId: req.user?.id,
+      ip: req.ip,
+      userAgent: req.get("User-Agent"),
+    };
+
+    const report = await AdminService.getPlatformReports(
+      req.query,
+      requestMeta,
+    );
     return res.status(200).json({
       success: true,
       message: "Platform report retrieved successfully",
@@ -23,6 +38,12 @@ class AdminController {
   });
 
   static getUsers = asyncHandler(async (req, res) => {
+    const requestMeta = {
+      userId: req.user?.id,
+      ip: req.ip,
+      userAgent: req.get("User-Agent"),
+    };
+
     const users = await AdminService.getUsers(req.query);
 
     return res.status(200).json({
@@ -33,7 +54,13 @@ class AdminController {
   });
 
   static getAuditLogs = asyncHandler(async (req, res) => {
-    const logs = await AdminService.getAuditLogs(req.query);
+    const requestMeta = {
+      userId: req.user?.id,
+      ip: req.ip,
+      userAgent: req.get("User-Agent"),
+    };
+
+    const logs = await AdminService.getAuditLogs(req.query, requestMeta);
 
     return res.status(200).json({
       success: true,
@@ -43,14 +70,23 @@ class AdminController {
   });
 
   static exportData = asyncHandler(async (req, res) => {
+    const requestMeta = {
+      userId: req.user?.id,
+      ip: req.ip,
+      userAgent: req.get("User-Agent"),
+    };
+
     const { type, format = "csv", startDate, endDate } = req.query;
 
-    const { csv, filename } = await ExportService.exportData({
-      type,
-      format,
-      startDate,
-      endDate,
-    });
+    const { csv, filename } = await ExportService.exportData(
+      {
+        type,
+        format,
+        startDate,
+        endDate,
+      },
+      requestMeta,
+    );
 
     res.setHeader("Content-Type", "text/csv");
 

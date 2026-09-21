@@ -1,92 +1,177 @@
 import AdminRepository from "./admin.repository.js";
 import AppError from "../../shared/utils/AppError.js";
+import logger from "../../shared/utils/logger.js";
 
 class AdminService {
-  static async getDashboardAnalytics() {
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
+  static async getDashboardAnalytics(requestMeta = {}) {
+    logger.info("Admin dashboard analytics requested", {
+      userId: requestMeta.userId,
+      ip: requestMeta.ip,
+      userAgent: requestMeta.userAgent,
+      timestamp: new Date(),
+    });
 
-    const endOfDay = new Date(startOfDay);
-    endOfDay.setDate(endOfDay.getDate() + 1);
+    try {
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
 
-    const [
-      totalUsers,
-      totalVendors,
-      totalOrders,
-      totalRevenue,
-      todaySales,
-      pendingVerifications,
-      activeDisputes,
-    ] = await Promise.all([
-      AdminRepository.getTotalUsers(),
-      AdminRepository.getTotalVendors(),
-      AdminRepository.getTotalOrders(),
-      AdminRepository.getTotalRevenue(),
-      AdminRepository.getTodaySales(startOfDay, endOfDay),
-      AdminRepository.getPendingVerifications(),
-    ]);
+      const endOfDay = new Date(startOfDay);
+      endOfDay.setDate(endOfDay.getDate() + 1);
 
-    return {
-      totalUsers,
-      totalVendors,
-      totalRevenue:
-        totalRevenue._sum.totalAmount?.toNumber?.() ??
-        Number(totalRevenue._sum.totalAmount ?? 0),
-      totalOrders,
-      todaySales:
-        todaySales._sum.totalAmount?.toNumber?.() ??
-        Number(todaySales._sum.totalAmount ?? 0),
-      pendingVerifications,
-      activeDisputes,
-    };
+      const [
+        totalUsers,
+        totalVendors,
+        totalOrders,
+        totalRevenue,
+        todaySales,
+        pendingVerifications,
+        activeDisputes,
+      ] = await Promise.all([
+        AdminRepository.getTotalUsers(),
+        AdminRepository.getTotalVendors(),
+        AdminRepository.getTotalOrders(),
+        AdminRepository.getTotalRevenue(),
+        AdminRepository.getTodaySales(startOfDay, endOfDay),
+        AdminRepository.getPendingVerifications(),
+      ]);
+
+      const analytics = {
+        totalUsers,
+        totalVendors,
+        totalRevenue:
+          totalRevenue._sum.totalAmount?.toNumber?.() ??
+          Number(totalRevenue._sum.totalAmount ?? 0),
+        totalOrders,
+        todaySales:
+          todaySales._sum.totalAmount?.toNumber?.() ??
+          Number(todaySales._sum.totalAmount ?? 0),
+        pendingVerifications,
+        activeDisputes,
+      };
+
+      logger.info("Admin dashboard analytics retrieved", {
+        userId: requestMeta.userId,
+        totalUsers,
+        totalVendors,
+        totalOrders,
+        pendingVerifications,
+        timestamp: new Date(),
+      });
+
+      return analytics;
+    } catch (error) {
+      logger.error("Failed to retrieve admin dashboard analytics", {
+        userId: requestMeta.userId,
+        error: error.message,
+        stack: error.stack,
+        ip: requestMeta.ip,
+        userAgent: requestMeta.userAgent,
+        timestamp: new Date(),
+      });
+
+      throw error;
+    }
   }
 
-  static async getPlatformReports(query) {
+  static async getPlatformReports(query, requestMeta = {}) {
     const { type = "sales", startDate, endDate, period = "monthly" } = query;
 
-    if (!startDate || !endDate) {
-      throw new AppError("startDate and endDate are required", 400);
-    }
-
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-
-    if (Number.isNaN(start.getTime())) {
-      throw new AppError("Invalid startDate", 400);
-    }
-
-    if (Number.isNaN(end.getTime())) {
-      throw new AppError("Invalid endDate", 400);
-    }
-
-    if (start > end) {
-      throw new AppError("startDate cannot be greater than endDate", 400);
-    }
-
-    switch (type.toLowerCase()) {
-      case "sales":
-        return this.getSalesReport(start, end, period);
-
-      default:
-        throw new AppError(`Unsupported report type: ${type}`, 400);
-    }
-  }
-
-  static async getSalesReport(startDate, endDate, period) {
-    const orders = await AdminRepository.getSalesReport(startDate, endDate);
-
-    const report = this.groupSalesByPeriod(orders, period);
-
-    return {
-      type: "sales",
+    logger.info("Admin platform report requested", {
+      userId: requestMeta.userId,
+      reportType: type,
       period,
       startDate,
       endDate,
-      data: report,
-    };
+      timestamp: new Date(),
+    });
+
+    try {
+      if (!startDate || !endDate) {
+        throw new AppError("startDate and endDate are required", 400);
+      }
+
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+
+      if (Number.isNaN(start.getTime())) {
+        throw new AppError("Invalid startDate", 400);
+      }
+
+      if (Number.isNaN(end.getTime())) {
+        throw new AppError("Invalid endDate", 400);
+      }
+
+      if (start > end) {
+        throw new AppError("startDate cannot be greater than endDate", 400);
+      }
+
+      switch (type.toLowerCase()) {
+        case "sales":
+          return await this.getSalesReport(start, end, period, requestMeta);
+
+        default:
+          throw new AppError(`Unsupported report type: ${type}`, 400);
+      }
+    } catch (error) {
+      if (!(error instanceof AppError)) {
+        logger.error("Failed to generate platform report", {
+          userId: requestMeta.userId,
+          reportType: type,
+          period,
+          startDate,
+          endDate,
+          error: error.message,
+          stack: error.stack,
+          ip: requestMeta.ip,
+          userAgent: requestMeta.userAgent,
+          timestamp: new Date(),
+        });
+      }
+
+      throw error;
+    }
   }
 
-  //Group sales into daily / weekly / monthly periods.
+  static async getSalesReport(startDate, endDate, period, requestMeta = {}) {
+    try {
+      const orders = await AdminRepository.getSalesReport(startDate, endDate);
+
+      const report = this.groupSalesByPeriod(orders, period);
+
+      logger.info("Sales report generated", {
+        userId: requestMeta.userId,
+        period,
+        startDate,
+        endDate,
+        orderCount: orders.length,
+        timestamp: new Date(),
+      });
+
+      return {
+        type: "sales",
+        period,
+        startDate,
+        endDate,
+        data: report,
+      };
+    } catch (error) {
+      logger.error("Failed to generate sales report", {
+        userId: requestMeta.userId,
+        period,
+        startDate,
+        endDate,
+        error: error.message,
+        stack: error.stack,
+        ip: requestMeta.ip,
+        userAgent: requestMeta.userAgent,
+        timestamp: new Date(),
+      });
+
+      throw error;
+    }
+  }
+
+  // Group sales into daily / weekly / monthly periods.
   static groupSalesByPeriod(orders, period) {
     const grouped = {};
 
@@ -114,118 +199,121 @@ class AdminService {
       }
 
       grouped[key].orders += 1;
-
       grouped[key].revenue += Number(order.totalAmount);
     }
 
     return Object.values(grouped);
   }
 
-  static async getUsers(query) {
-    return AdminRepository.findUsers(query);
-  }
+  static async getUsers(query, requestMeta = {}) {
+    try {
+      const users = await AdminRepository.findUsers(query);
 
-  static async findAuditLogs({
-  page = 1,
-  limit = 50,
-  action,
-  resource,
-  startDate,
-  endDate,
-}) {
-  const where = {};
+      logger.info("Admin retrieved users", {
+        userId: requestMeta.userId,
+        page: query.page,
+        limit: query.limit,
+        timestamp: new Date(),
+      });
 
-  if (action) {
-    where.action = action;
-  }
+      return users;
+    } catch (error) {
+      logger.error("Failed to retrieve users", {
+        userId: requestMeta.userId,
+        error: error.message,
+        stack: error.stack,
+        timestamp: new Date(),
+      });
 
-  if (resource) {
-    where.resource = resource;
-  }
-
-  if (startDate || endDate) {
-    where.createdAt = {};
-
-    if (startDate) {
-      where.createdAt.gte = new Date(startDate);
-    }
-
-    if (endDate) {
-      where.createdAt.lte = new Date(endDate);
+      throw error;
     }
   }
 
-  return new QueryBuilder(prisma.auditLog, {
-    page,
-    limit,
-    ...where,
-  })
-    .sort()
-    .paginate()
-    .exec();
-}
+  static async getAuditLogs(query, requestMeta = {}) {
+    let { page = 1, limit = 50, action, resource, startDate, endDate } = query;
 
+    page = Number(page);
+    limit = Number(limit);
 
-  static async getAuditLogs(query) {
-  let {
-    page = 1,
-    limit = 50,
-    action,
-    resource,
-    startDate,
-    endDate,
-  } = query;
+    logger.info("Admin audit logs requested", {
+      userId: requestMeta.userId,
+      page,
+      limit,
+      action,
+      resource,
+      startDate,
+      endDate,
+      timestamp: new Date(),
+    });
 
-  page = Number(page);
-  limit = Number(limit);
+    try {
+      if (page < 1) {
+        throw new AppError("Page must be greater than 0", 400);
+      }
 
-  if (page < 1) {
-    throw new AppError(
-      "Page must be greater than 0",
-      400
-    );
-  }
+      if (limit < 1 || limit > 100) {
+        throw new AppError("Limit must be between 1 and 100", 400);
+      }
 
-  if (limit < 1 || limit > 100) {
-    throw new AppError(
-      "Limit must be between 1 and 100",
-      400
-    );
-  }
+      const validActions = [
+        "CREATE",
+        "UPDATE",
+        "DELETE",
+        "LOGIN",
+        "LOGOUT",
+        "APPROVE",
+        "REJECT",
+        "SUSPEND",
+        "BAN",
+        "VERIFY",
+      ];
 
-  const validActions = [
-    "CREATE",
-    "UPDATE",
-    "DELETE",
-    "LOGIN",
-    "LOGOUT",
-    "APPROVE",
-    "REJECT",
-    "SUSPEND",
-    "BAN",
-    "VERIFY",
-  ];
+      if (action) {
+        action = action.toUpperCase();
 
-  if (action) {
-    action = action.toUpperCase();
+        if (!validActions.includes(action)) {
+          logger.warn("Invalid audit action requested", {
+            userId: requestMeta.userId,
+            action,
+            timestamp: new Date(),
+          });
 
-    if (!validActions.includes(action)) {
-      throw new AppError(
-        `Invalid audit action: ${action}`,
-        400
-      );
+          throw new AppError(`Invalid audit action: ${action}`, 400);
+        }
+      }
+
+      const logs = await AdminRepository.findAuditLogs({
+        page,
+        limit,
+        action,
+        resource,
+        startDate,
+        endDate,
+      });
+
+      logger.info("Admin audit logs retrieved", {
+        userId: requestMeta.userId,
+        page,
+        limit,
+        action,
+        resource,
+        timestamp: new Date(),
+      });
+
+      return logs;
+    } catch (error) {
+      if (!(error instanceof AppError)) {
+        logger.error("Failed to retrieve audit logs", {
+          userId: requestMeta.userId,
+          error: error.message,
+          stack: error.stack,
+          timestamp: new Date(),
+        });
+      }
+
+      throw error;
     }
   }
-
-  return AdminRepository.findAuditLogs({
-    page,
-    limit,
-    action,
-    resource,
-    startDate,
-    endDate,
-  });
-}
 }
 
 export default AdminService;

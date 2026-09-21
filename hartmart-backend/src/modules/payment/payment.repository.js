@@ -23,6 +23,14 @@ class PaymentRepository {
     });
   }
 
+  static async findByReference(reference) {
+    return prisma.payment.findUnique({
+      where: {
+        reference,
+      },
+    });
+  }
+
   static async updateById(id, data) {
     return prisma.payment.update({
       where: {

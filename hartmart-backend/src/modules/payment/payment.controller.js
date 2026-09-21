@@ -1,5 +1,6 @@
 import asyncHandler from "../../shared/utils/asyncHandler.js";
 import PaymentService from "./payment.service.js";
+import PaymentWebhookService from "./payment.webhook.service.js";
 
 const initializePayment = asyncHandler(async (req, res) => {
   const requestMeta = {
@@ -32,4 +33,59 @@ const confirmPayment = asyncHandler(async (req, res) => {
   });
 });
 
-export { initializePayment, confirmPayment };
+const paystackWebhook = asyncHandler(async (req, res) => {
+  try {
+    const signature = req.headers["x-paystack-signature"];
+
+    // IMPORTANT:
+    // We want the original request body for signature verification.
+    const rawBody = req.rawBody;
+
+    if (!rawBody) {
+      return res.status(400).json({
+        success: false,
+        message: "Raw request body is required",
+      });
+    }
+
+    const isValid = PaymentWebhookService.verifySignature(rawBody, signature);
+
+    if (!isValid) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid Paystack signature",
+      });
+    }
+
+    // Don't process payment here.
+    // Put it on the queue and immediately respond.
+    await paymentQueue.add(
+      "paystack-webhook",
+      {
+        event: req.body,
+      },
+      {
+        attempts: 5,
+        backoff: {
+          type: "exponential",
+          delay: 5000,
+        },
+
+        removeOnComplete: true,
+        removeOnFail: false,
+      },
+    );
+
+    return res.status(200).json({
+      success: true,
+    });
+  } catch (error) {
+    console.error("Paystack webhook error:", error);
+
+    return res.status(500).json({
+      success: false,
+    });
+  }
+});
+
+export { initializePayment, confirmPayment,paystackWebhook };

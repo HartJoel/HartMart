@@ -206,6 +206,59 @@ class PaymentService {
       paidAt: updatedPayment.paidAt,
     };
   }
+
+ static async getPayments(query) {
+  const result = await PaymentRepository.findAll(query);
+
+  const payments = result.data ?? result;
+
+  const formattedPayments = payments.map((payment) => ({
+    id: payment.id,
+    reference: payment.reference,
+    orderId: payment.orderId,
+    amount: payment.amount,
+    currency: payment.currency,
+    method: payment.method,
+    status: payment.status,
+    gateway: payment.gateway,
+    gatewayTransactionId: payment.gatewayTransactionId,
+    attemptCount: payment.attemptCount,
+    paidAt: payment.paidAt,
+    createdAt: payment.createdAt,
+  }));
+
+  return {
+    data: formattedPayments,
+    pagination: result.pagination,
+  };
+}
+
+  static async getPaymentById(id) {
+    const payment = await PaymentRepository.findById(id);
+
+    if (!payment) {
+      throw new Error("Payment not found");
+    }
+
+    return {
+      id: payment.id,
+      reference: payment.reference,
+      orderId: payment.orderId,
+      userId: payment.userId,
+      amount: payment.amount,
+      currency: payment.currency,
+      method: payment.method,
+      status: payment.status,
+      gateway: payment.gateway,
+      gatewayTransactionId: payment.gatewayTransactionId,
+      attemptCount: payment.attemptCount,
+      last4: payment.last4,
+      cardBrand: payment.cardBrand,
+      paidAt: payment.paidAt,
+      createdAt: payment.createdAt,
+      updatedAt: payment.updatedAt,
+    };
+  }
 }
 
 export default PaymentService;

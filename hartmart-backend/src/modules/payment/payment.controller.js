@@ -88,4 +88,31 @@ const paystackWebhook = asyncHandler(async (req, res) => {
   }
 });
 
-export { initializePayment, confirmPayment,paystackWebhook };
+const getPayments = asyncHandler(async (req, res) => {
+  const result = await PaymentService.getPayments(req.query);
+
+  return res.status(200).json({
+    success: true,
+    data: result.data,
+    pagination: result.pagination,
+  });
+});
+
+const getPayment = asyncHandler(async (req, res) => {
+  const { paymentId } = req.params;
+
+  const payment = await PaymentService.getPaymentById(paymentId);
+
+  return res.status(200).json({
+    success: true,
+    data: payment,
+  });
+});
+
+export {
+  initializePayment,
+  confirmPayment,
+  paystackWebhook,
+  getPayments,
+  getPayment,
+};

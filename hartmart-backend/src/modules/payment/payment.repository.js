@@ -1,4 +1,5 @@
 import { prisma } from "../../config/db.js";
+import QueryBuilder from "../../shared/utils/queryBuilder.js";
 
 class PaymentRepository {
   static async create(data) {
@@ -28,6 +29,20 @@ class PaymentRepository {
       where: {
         reference,
       },
+    });
+  }
+
+  static async findAll(query) {
+    return new QueryBuilder(prisma.payment, query)
+      .filter()
+      .sort()
+      .paginate()
+      .exec();
+  }
+
+  static async findById(paymentId) {
+    return prisma.payment.findUnique({
+      where: { id: paymentId },
     });
   }
 

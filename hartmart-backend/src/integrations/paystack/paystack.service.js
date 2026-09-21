@@ -17,6 +17,14 @@ class PaystackService {
 
     return response.data;
   }
+
+  static async verifyTransaction(reference) {
+    const response = await paystackApi.get(
+      `/transaction/verify/${reference}`,
+    );
+
+    return response.data;
+  }
 }
 
 export default PaystackService;

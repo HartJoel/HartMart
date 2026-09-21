@@ -20,4 +20,16 @@ const initializePayment = asyncHandler(async (req, res) => {
   });
 });
 
-export { initializePayment };
+const confirmPayment = asyncHandler(async (req, res) => {
+  const payment = await PaymentService.confirmPayment(
+    req.user.id,
+    req.params.paymentId,
+  );
+
+  return res.status(200).json({
+    success: true,
+    data: payment,
+  });
+});
+
+export { initializePayment, confirmPayment };

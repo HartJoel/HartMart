@@ -7,6 +7,14 @@ class PaymentRepository {
     });
   }
 
+  static async findById(id) {
+    return prisma.payment.findUnique({
+      where: {
+        id,
+      },
+    });
+  }
+
   static async findByOrderId(orderId) {
     return prisma.payment.findFirst({
       where: {

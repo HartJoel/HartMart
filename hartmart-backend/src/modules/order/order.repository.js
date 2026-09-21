@@ -47,14 +47,20 @@ class OrderRespository {
 
   static async findById(orderId) {
     return prisma.order.findUnique({
-      where: { id: orderId },
+      where: {
+        id: orderId,
+      },
       include: {
-        items: true,
-        timeline: true,
+        customer: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+          },
+        },
       },
     });
   }
-
   static async getTimeline(orderId) {
     return prisma.orderTimeline.findMany({
       where: { orderId },

@@ -19,6 +19,7 @@ import healthRoutes from "./modules/health/health.routes.js";
 import notificationRoutes from "./modules/notification/notification.routes.js";
 import errorMiddleware from "./shared/middleware/error.middleware.js";
 import adminRoutes from "./modules/admin/admin.routes.js";
+import paymentRoutes from "./modules/payment/payment.routes.js";
 
 config();
 connectDB();
@@ -43,6 +44,7 @@ app.use("/v1/orders", orderRoutes);
 app.use("/v1/reviews", reviewRoutes);
 app.use("/v1/notification", notificationRoutes);
 app.use("/v1/admin", adminRoutes);
+app.use("/v1/payment", paymentRoutes);
 app.use("/api", healthRoutes);
 
 app.use(errorMiddleware);

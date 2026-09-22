@@ -2,7 +2,7 @@ import VendorRepository from "./vendor.repository.js";
 import slugify from "slugify";
 import crypto from "crypto";
 import { prisma } from "../../config/db.js";
-import UserRepository from "../auth/user.repository.js";
+import UserRepository from "../user/user.repository.js";
 
 class VendorService {
   static async applyAsVendor(userId, data) {

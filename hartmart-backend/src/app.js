@@ -5,7 +5,7 @@ import { connectDB, disconnectDB } from "./config/db.js";
 
 // Import Routes
 import authRoutes from "./modules/auth/auth.routes.js";
-import userRoutes from "./modules/auth/user.routes.js";
+import userRoutes from "./modules/user/user.routes.js";
 import refreshRoutes from "./modules/auth/refresh.routes.js";
 import addressRoutes from "./modules/address/address.routes.js";
 import vendorRoutes from "./modules/vendor/vendor.routes.js";

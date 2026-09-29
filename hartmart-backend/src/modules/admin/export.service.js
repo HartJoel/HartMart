@@ -1,6 +1,7 @@
 import { Parser } from "json2csv";
 import AppError from "../../shared/utils/AppError.js";
 import AdminRepository from "./admin.repository.js";
+import logger from "../../shared/utils/logger.js";
 
 class ExportService {
   static async exportData({ type, format = "csv", startDate, endDate }) {
@@ -55,6 +56,7 @@ class ExportService {
     const parser = new Parser();
 
     const csv = parser.parse(normalizedData);
+    logger.info("Admin data export generated", { exportType: type, format, rowCount: normalizedData.length, startDate, endDate });
 
     return {
       csv,

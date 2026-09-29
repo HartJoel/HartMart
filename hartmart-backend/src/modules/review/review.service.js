@@ -4,6 +4,7 @@ import AppError from "../../shared/utils/AppError.js";
 import EventService from "../../events/eventService.js";
 import EventTypes from "../../events/eventTypes.js";
 import ProductRepository from "../product/product.repository.js";
+import logger from "../../shared/utils/logger.js";
 
 class ReviewService {
   static async addReviewService(payload) {
@@ -31,6 +32,7 @@ class ReviewService {
       customerId: review.userId,
       vendorId: product.vendorId,
     });
+    logger.info("Review created", { reviewId: review.id, productId, userId, vendorId: product.vendorId, rating: review.rating });
     return review;
   }
 
@@ -63,6 +65,7 @@ class ReviewService {
       vendorId: vendor.id,
       vendorUserId: userId,
     });
+    logger.info("Vendor responded to review", { reviewId, vendorId: vendor.id, customerId: review.userId });
     return updatedReview;
   }
 
@@ -82,6 +85,7 @@ class ReviewService {
       comment: data.comment,
     });
     EventService.emit(EventTypes.REVIEW_UPDATED, { userId, review: updatedReview });
+    logger.info("Review updated", { reviewId, userId, rating: updatedReview.rating });
     return updatedReview;
   }
 
@@ -98,6 +102,7 @@ class ReviewService {
 
     await ReviewRespository.deleteReview(reviewId);
     EventService.emit(EventTypes.REVIEW_DELETED, { userId, review });
+    logger.info("Review deleted", { reviewId, userId, productId: review.productId });
   }
 
   static async toggleHelpful(reviewId, userId) {
@@ -114,6 +119,7 @@ class ReviewService {
       await ReviewRespository.removeVote(reviewId, userId);
 
       const count = await ReviewRespository.countVotes(reviewId);
+      logger.info("Review helpful vote removed", { reviewId, userId, helpfulVoteCount: count });
 
       return {
         liked: false,
@@ -124,6 +130,7 @@ class ReviewService {
     await ReviewRespository.addVote(reviewId, userId);
 
     const count = await ReviewRespository.countVotes(reviewId);
+    logger.info("Review marked helpful", { reviewId, userId, helpfulVoteCount: count });
 
     return {
       liked: true,

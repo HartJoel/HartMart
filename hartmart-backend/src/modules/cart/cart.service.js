@@ -1,6 +1,7 @@
 import CartRespository from "./cart.repository.js";
 import ProductRepository from "../product/product.repository.js";
 import AppError from "../../shared/utils/AppError.js";
+import logger from "../../shared/utils/logger.js";
 
 class CartService {
   static async addToCart(userId, data) {
@@ -22,15 +23,19 @@ class CartService {
         throw new Error("Not enough stock available");
       }
 
-      return await CartRespository.updateQuantity(existing.id, newQuantity);
+      const item = await CartRespository.updateQuantity(existing.id, newQuantity);
+      logger.info("Cart item quantity increased", { userId, cartItemId: item.id, productId: data.productId, quantity: newQuantity });
+      return item;
     }
 
-    return await CartRespository.create({
+    const item = await CartRespository.create({
       userId,
       productId: data.productId,
       quantity: data.quantity,
       selectedVariation: data.selectedVariation || {},
     });
+    logger.info("Item added to cart", { userId, cartItemId: item.id, productId: data.productId, quantity: item.quantity });
+    return item;
   }
 
   static async getCart(userId) {
@@ -41,6 +46,7 @@ class CartService {
     }, 0);
 
     const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+    logger.info("Cart retrieved", { userId, itemCount, totalAmount: total });
 
     return {
       items,
@@ -54,15 +60,21 @@ class CartService {
       throw new Error("Quantity must be greater than 0");
     }
 
-    return CartRespository.updateQuantity(cartItemId, quantity);
+    const item = await CartRespository.updateQuantity(cartItemId, quantity);
+    logger.info("Cart item updated", { cartItemId, quantity });
+    return item;
   }
 
   static async removeFromCart(cartItemId) {
-    return CartRespository.deleteItem(cartItemId);
+    const result = await CartRespository.deleteItem(cartItemId);
+    logger.info("Cart item removed", { cartItemId });
+    return result;
   }
 
   static async clearCart(userId) {
-    return CartRespository.clearCart(userId);
+    const result = await CartRespository.clearCart(userId);
+    logger.info("Cart cleared", { userId, removedItemCount: result.count });
+    return result;
   }
 }
 

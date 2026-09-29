@@ -1,6 +1,7 @@
 import UserRepository from "./user.repository.js";
 import AppError from "../../shared/utils/AppError.js";
 import { uploadAvatarToCloudinary } from "../../shared/utils/uploadToCloudinary.js";
+import logger from "../../shared/utils/logger.js";
 
 class UserService {
   static async getCurrentUser(userId) {
@@ -11,6 +12,7 @@ class UserService {
     }
 
     const { password, ...safeUser } = user;
+    logger.info("Current user retrieved", { userId });
 
     return safeUser;
   }
@@ -41,6 +43,7 @@ class UserService {
         name,
         avatarData,
       );
+      logger.info("User profile updated", { userId, nameChanged: Boolean(name), avatarChanged: Boolean(file) });
 
       return updatedUser;
     } catch (error) {
@@ -56,6 +59,7 @@ class UserService {
     }
 
     const { password, ...result } = user;
+    logger.info("User retrieved", { userId: id });
 
     return result;
   }
@@ -74,6 +78,7 @@ class UserService {
       emailVerified: user.emailVerified,
       status: user.status,
     }));
+    logger.info("Users listed", { resultCount: formattedUsers.length });
 
     return {
       data: formattedUsers,

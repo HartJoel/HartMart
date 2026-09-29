@@ -5,6 +5,7 @@ import VendorRepository from "../vendor/vendor.repository.js";
 import NotificationService from "../notification/notification.service.js";
 import EventService from "../../events/eventService.js";
 import EventTypes from "../../events/eventTypes.js";
+import logger from "../../shared/utils/logger.js";
 
 class OrderService {
   static async createOrder(userId, payload) {
@@ -81,6 +82,7 @@ class OrderService {
       orderItems,
       customerId: userId,
     });
+    logger.info("Order created", { orderId: order.id, orderNumber: order.orderNumber, customerId: userId, amount: Number(order.totalAmount), vendorIds: [...new Set(orderItems.map((item) => item.vendorId).filter(Boolean))], itemCount: orderItems.length });
 
     return order;
   }
@@ -112,6 +114,7 @@ class OrderService {
     if (status === "DELIVERED") {
       EventService.emit(EventTypes.ORDER_DELIVERED, { userId: order.customerId, order });
     }
+    logger.info("Order status updated", { orderId, customerId: order.customerId, status });
     return order;
   }
 }

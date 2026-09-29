@@ -8,6 +8,7 @@ import { uploadProductToCloudinary } from "../../shared/utils/uploadToCloudinary
 import AppError from "../../shared/utils/AppError.js";
 import EventService from "../../events/eventService.js";
 import EventTypes from "../../events/eventTypes.js";
+import logger from "../../shared/utils/logger.js";
 
 class ProductService {
   static async createProduct(vendorUserId, data, file, context = {}) {
@@ -62,6 +63,7 @@ class ProductService {
     });
 
     EventService.emit(EventTypes.PRODUCT_CREATED, { userId: vendorUserId, vendorId: vendor.id, product, ...context });
+    logger.info("Product created", { productId: product.id, vendorId: vendor.id, userId: vendorUserId, categoryId: product.categoryId, price: Number(product.basePrice) });
 
     return product;
   }
@@ -143,6 +145,7 @@ class ProductService {
 
     const updatedProduct = await ProductRepository.updateProduct(productId, updatedData);
     EventService.emit(EventTypes.PRODUCT_UPDATED, { userId, vendorId: vendor.id, product: updatedProduct, ...context });
+    logger.info("Product updated", { productId, vendorId: vendor.id, userId, changedFields: Object.keys(data) });
     return updatedProduct;
   }
 
@@ -177,6 +180,7 @@ class ProductService {
 
     const updatedProduct = await ProductRepository.updateStock(productId, data);
     EventService.emit(EventTypes.PRODUCT_STOCK_UPDATED, { userId, vendorId: vendor.id, product: updatedProduct, metadata: { totalStock: data.totalStock, reservedStock: data.reservedStock } });
+    logger.info("Product stock updated", { productId, vendorId: vendor.id, userId, totalStock: updatedProduct.totalStock, availableStock: updatedProduct.availableStock });
     return updatedProduct;
   }
 
@@ -203,6 +207,7 @@ class ProductService {
 
     const deleted = await ProductRepository.softDeleteProduct(productId);
     EventService.emit(EventTypes.PRODUCT_DELETED, { userId, vendorId: vendor.id, product });
+    logger.info("Product deleted", { productId, vendorId: vendor.id, userId });
     return deleted;
   }
 }

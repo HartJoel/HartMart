@@ -1,13 +1,18 @@
 import NotificationRepository from "./notification.repository.js";
 import AppError from "../../shared/utils/AppError.js";
+import logger from "../../shared/utils/logger.js";
 
 class NotificationService {
   static async create(data) {
-    return NotificationRepository.create(data);
+    const notification = await NotificationRepository.create(data);
+    logger.info("Notification created", { notificationId: notification.id, userId: data.userId, type: data.type });
+    return notification;
   }
 
   static async getUserNotifications(userId) {
-    return NotificationRepository.findByUser(userId);
+    const notifications = await NotificationRepository.findByUser(userId);
+    logger.info("User notifications retrieved", { userId, notificationCount: notifications.length });
+    return notifications;
   }
 
   static async getById(notificationId) {
@@ -31,14 +36,18 @@ class NotificationService {
       throw new AppError("Forbidden", 403);
     }
 
-    return NotificationRepository.update(notificationId, {
+    const updatedNotification = await NotificationRepository.update(notificationId, {
       isRead: true,
       readAt: new Date(),
     });
+    logger.info("Notification marked as read", { userId, notificationId });
+    return updatedNotification;
   }
 
   static async markAllAsRead(userId) {
-    return NotificationRepository.markAllAsRead(userId);
+    const result = await NotificationRepository.markAllAsRead(userId);
+    logger.info("All notifications marked as read", { userId, updatedCount: result.count });
+    return result;
   }
 
   static async delete(notificationId, userId) {
@@ -52,7 +61,9 @@ class NotificationService {
       throw new AppError("Forbidden", 403);
     }
 
-    return NotificationRepository.delete(notificationId);
+    const result = await NotificationRepository.delete(notificationId, userId);
+    logger.info("Notification deleted", { userId, notificationId });
+    return result;
   }
 }
 

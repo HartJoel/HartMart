@@ -1,6 +1,7 @@
 import slugify from "slugify";
 import CategoryRepository from "./category.repository.js";
 import AppError from "../../shared/utils/AppError.js";
+import logger from "../../shared/utils/logger.js";
 
 class CategoryService {
   static async createCategory(data) {
@@ -18,21 +19,27 @@ class CategoryService {
       }
     }
 
-    return await CategoryRepository.create({
+    const category = await CategoryRepository.create({
       name: data.name,
       slug,
       description: data.description,
       icon: data.icon,
       parentId: data.parentId || null,
     });
+    logger.info("Category created", { categoryId: category.id, slug: category.slug, parentId: category.parentId });
+    return category;
   }
 
   static async getCategory(id) {
-    return CategoryRepository.findById(id);
+    const category = await CategoryRepository.findById(id);
+    logger.info("Category retrieved", { categoryId: id, found: Boolean(category) });
+    return category;
   }
 
   static async list() {
-    return CategoryRepository.listCategories();
+    const categories = await CategoryRepository.listCategories();
+    logger.info("Categories retrieved", { categoryCount: categories.length });
+    return categories;
   }
 
   static async update(id, data) {
@@ -45,14 +52,18 @@ class CategoryService {
       });
     }
 
-    return CategoryRepository.update(id, {
+    const category = await CategoryRepository.update(id, {
       ...data,
       ...(slug && { slug }),
     });
+    logger.info("Category updated", { categoryId: id });
+    return category;
   }
 
   static async delete(id) {
-    return CategoryRepository.deleteById(id);
+    const result = await CategoryRepository.deleteById(id);
+    logger.info("Category deleted", { categoryId: id });
+    return result;
   }
 }
 

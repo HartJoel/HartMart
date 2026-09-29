@@ -4,6 +4,7 @@ import AppError from "../../shared/utils/AppError.js";
 import OrderRepository from "../order/order.repository.js";
 import EventService from "../../events/eventService.js";
 import EventTypes from "../../events/eventTypes.js";
+import logger from "../../shared/utils/logger.js";
 
 class PaymentWebhookService {
   /**
@@ -92,6 +93,7 @@ class PaymentWebhookService {
     // Paystack can send the same webhook more than once.
     // Don't process a payment that's already completed.
     if (payment.status === "COMPLETED") {
+      logger.info("Duplicate successful payment webhook ignored", { paymentId: payment.id, orderId: payment.orderId, reference });
       return {
         handled: true,
         duplicate: true,
@@ -160,6 +162,7 @@ class PaymentWebhookService {
 
     const order = await OrderRepository.findById(updatedPayment.orderId);
     EventService.emit(EventTypes.PAYMENT_RECEIVED, { payment: updatedPayment, order, userId: updatedPayment.userId });
+    logger.info("Payment completed from webhook", { paymentId: updatedPayment.id, orderId: updatedPayment.orderId, userId: updatedPayment.userId, amount: Number(updatedPayment.amount), currency: updatedPayment.currency });
 
     // 8. Update order
     //
@@ -190,6 +193,7 @@ class PaymentWebhookService {
     if (!payment) throw new AppError(`Payment not found for reference ${reference}`, 404);
 
     if (payment.status === "COMPLETED") {
+      logger.info("Failure webhook ignored for completed payment", { paymentId: payment.id, orderId: payment.orderId, reference });
       return { handled: true, duplicate: true, paymentId: payment.id, reference };
     }
 
@@ -200,6 +204,7 @@ class PaymentWebhookService {
     });
     const order = await OrderRepository.findById(updatedPayment.orderId);
     EventService.emit(EventTypes.PAYMENT_FAILED, { payment: updatedPayment, order, userId: updatedPayment.userId });
+    logger.warn("Payment failed from webhook", { paymentId: updatedPayment.id, orderId: updatedPayment.orderId, userId: updatedPayment.userId, status: updatedPayment.status });
 
     return { handled: true, paymentId: updatedPayment.id, reference, status: updatedPayment.status };
   }

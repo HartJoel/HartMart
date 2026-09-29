@@ -5,6 +5,7 @@ import crypto from "crypto";
 import AppError from "../../shared/utils/AppError.js";
 import EventService from "../../events/eventService.js";
 import EventTypes from "../../events/eventTypes.js";
+import logger from "../../shared/utils/logger.js";
 
 class PaymentService {
   static async initializePayment(userId, payload, requestMeta = {}) {
@@ -98,8 +99,8 @@ class PaymentService {
 
         status: "PENDING",
       });
-
       // 9. Return frontend data
+      logger.info("Payment initialized", { paymentId: updatedPayment.id, orderId: order.id, userId, amount: Number(updatedPayment.amount), currency: updatedPayment.currency, attemptCount: updatedPayment.attemptCount, ip: requestMeta.ip, userAgent: requestMeta.userAgent });
       return {
         paymentId: updatedPayment.id,
         reference: paystackResponse.data.reference,
@@ -117,6 +118,7 @@ class PaymentService {
           error: error.response?.data || error.message,
         },
       });
+      logger.warn("Payment initialization failed", { paymentId: payment.id, orderId: order.id, userId, attemptCount: payment.attemptCount, error: error.message, ip: requestMeta.ip, userAgent: requestMeta.userAgent });
 
       throw new AppError(
         "Unable to initialize payment. Please try again.",
@@ -173,10 +175,10 @@ class PaymentService {
         gatewayTransactionId: transaction.id?.toString(),
         gatewayResponse: transaction,
       });
-
       if (transaction.status === "failed") {
         const order = await OrderRepository.findById(payment.orderId);
         EventService.emit(EventTypes.PAYMENT_FAILED, { payment: updatedPayment, order, userId: payment.userId });
+        logger.warn("Payment failed", { paymentId: payment.id, orderId: payment.orderId, userId, status: transaction.status });
       }
 
       return {
@@ -205,6 +207,7 @@ class PaymentService {
     });
     const order = await OrderRepository.findById(updatedPayment.orderId);
     EventService.emit(EventTypes.PAYMENT_RECEIVED, { payment: updatedPayment, order, userId: updatedPayment.userId });
+    logger.info("Payment confirmed", { paymentId: updatedPayment.id, orderId: updatedPayment.orderId, userId: updatedPayment.userId, amount: Number(updatedPayment.amount), currency: updatedPayment.currency, status: updatedPayment.status });
 
     return {
       paymentId: updatedPayment.id,

@@ -50,7 +50,7 @@ const getUserById = asyncHandler(async (req, res) => {
 });
 
 const getAllUsers = asyncHandler(async (req, res) => {
-  const users = await UserService.getAllUsers(req.query);
+  const users = await UserService.getAllUsers(req.validatedQuery ?? req.query);
 
   return res.json({
     success: true,

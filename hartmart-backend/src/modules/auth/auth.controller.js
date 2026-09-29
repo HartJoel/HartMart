@@ -28,7 +28,7 @@ const register = asyncHandler(async (req, res) => {
 });
 
 const verifyEmail = asyncHandler(async (req, res) => {
-  const { token } = req.query;
+  const { token } = req.validatedQuery ?? req.query;
 
   const requestMeta = {
     userId: req.user?.id,
@@ -103,7 +103,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
 });
 
 const resetPassword = asyncHandler(async (req, res) => {
-  const { token } = req.query;
+  const { token } = req.validatedQuery ?? req.query;
   const { password } = req.body;
 
   const requestMeta = {

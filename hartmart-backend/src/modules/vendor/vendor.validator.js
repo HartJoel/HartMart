@@ -64,3 +64,11 @@ export const vendorApplicationSchema = z.object({
     .string()
     .regex(/^\d{3}$/, "Bank code must be 3 digits"),
 });
+
+export const updateVendorProfileSchema = vendorApplicationSchema
+  .partial()
+  .refine((data) => Object.keys(data).length > 0, "Provide at least one vendor profile field to update");
+
+export const rejectVendorSchema = z.object({
+  reason: z.string().max(1000).trim().optional(),
+});

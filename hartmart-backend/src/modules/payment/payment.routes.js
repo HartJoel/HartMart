@@ -8,15 +8,19 @@ import {
 } from "./payment.controller.js";
 import { authMiddleware } from "../../shared/middleware/auth.middleware.js";
 import { requireRole } from "../../shared/middleware/rbac.middleware.js";
+import { validateRequest } from "../../shared/middleware/validate.request.js";
+import { initializePaymentSchema, paystackWebhookSchema } from "./payment.validator.js";
+import { validateIdParam } from "../../shared/middleware/validate.id-param.js";
+import { paymentListQuerySchema } from "../../shared/validators/list-query.validator.js";
 
 const router = express.Router();
 
 router.use(authMiddleware);
 
-router.post("/initialize", initializePayment);
-router.post("/:paymentId/confirm", confirmPayment);
-router.post("/webhooks/paystack", paystackWebhook);
-router.get("/", requireRole("ADMIN"), getPayments);
-router.get("/:paymentId", getPayment);
+router.post("/initialize", validateRequest(initializePaymentSchema), initializePayment);
+router.post("/:paymentId/confirm", validateIdParam("paymentId"), confirmPayment);
+router.post("/webhooks/paystack", validateRequest(paystackWebhookSchema), paystackWebhook);
+router.get("/", validateRequest(paymentListQuerySchema, "query"), requireRole("ADMIN"), getPayments);
+router.get("/:paymentId", validateIdParam("paymentId"), getPayment);
 
 export default router;

@@ -11,6 +11,7 @@ import {
   createAddressSchema,
   updateAddressSchema,
 } from "./address.validator.js";
+import { validateIdParam } from "../../shared/middleware/validate.id-param.js";
 
 const router = express.Router();
 
@@ -20,9 +21,10 @@ router.post("/", validateRequest(createAddressSchema), createAddress);
 router.get("/", getUserAddresses);
 router.patch(
   "/:addressId",
+  validateIdParam("addressId"),
   validateRequest(updateAddressSchema),
   updateAddress,
 );
-router.delete("/:addressId", deleteAddress);
+router.delete("/:addressId", validateIdParam("addressId"), deleteAddress);
 
 export default router;

@@ -89,7 +89,7 @@ const paystackWebhook = asyncHandler(async (req, res) => {
 });
 
 const getPayments = asyncHandler(async (req, res) => {
-  const result = await PaymentService.getPayments(req.query);
+  const result = await PaymentService.getPayments(req.validatedQuery ?? req.query);
 
   return res.status(200).json({
     success: true,

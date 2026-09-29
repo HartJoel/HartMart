@@ -20,7 +20,7 @@ const createProduct = asyncHandler(async (req, res) => {
 });
 
 const getAllProducts = asyncHandler(async (req, res) => {
-  const products = await ProductService.getAllProducts(req.query);
+  const products = await ProductService.getAllProducts(req.validatedQuery ?? req.query);
   return res.status(201).json({
     success: true,
     message: "Get all Products",
@@ -32,7 +32,7 @@ const getAllProducts = asyncHandler(async (req, res) => {
 const getVendorProducts = asyncHandler(async (req, res) => {
   const vendorProducts = await ProductService.getVendorProduct(
     req.user.id,
-    req.query,
+    req.validatedQuery ?? req.query,
   );
 
   return res.status(201).json({
@@ -59,7 +59,7 @@ const updateStock = asyncHandler(async (req, res) => {
 });
 
 const getLowStock = asyncHandler(async (req, res) => {
-  const data = await ProductService.getLowStockProducts(req.user.id, req.query);
+  const data = await ProductService.getLowStockProducts(req.user.id, req.validatedQuery ?? req.query);
 
   return res.status(201).json({
     success: "true",

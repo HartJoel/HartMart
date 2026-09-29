@@ -8,16 +8,19 @@ import {
   toggleHelpful,
   updateReview,
 } from "./review.controller.js";
+import { validateRequest } from "../../shared/middleware/validate.request.js";
+import { createReviewSchema, reviewResponseSchema, updateReviewSchema } from "./review.validator.js";
+import { validateIdParam } from "../../shared/middleware/validate.id-param.js";
 
 const router = express.Router();
 
 router.use(authMiddleware);
 
-router.post("/", createReview);
-router.get("/:productId", getReviews);
-router.patch("/:reviewId", updateReview);
-router.post("/:reviewId/response", respondToReview);
-router.delete("/:reviewId", deleteReview);
-router.post("/:reviewId/helpful", toggleHelpful);
+router.post("/", validateRequest(createReviewSchema), createReview);
+router.get("/:productId", validateIdParam("productId"), getReviews);
+router.patch("/:reviewId", validateIdParam("reviewId"), validateRequest(updateReviewSchema), updateReview);
+router.post("/:reviewId/response", validateIdParam("reviewId"), validateRequest(reviewResponseSchema), respondToReview);
+router.delete("/:reviewId", validateIdParam("reviewId"), deleteReview);
+router.post("/:reviewId/helpful", validateIdParam("reviewId"), toggleHelpful);
 
 export default router;

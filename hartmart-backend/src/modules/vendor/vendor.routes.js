@@ -14,7 +14,8 @@ import {
   updateVendorProfile,
 } from "./vendor.controller.js";
 import { validateRequest } from "../../shared/middleware/validate.request.js";
-import { vendorApplicationSchema } from "./vendor.validator.js";
+import { rejectVendorSchema, updateVendorProfileSchema, vendorApplicationSchema } from "./vendor.validator.js";
+import { validateIdParam } from "../../shared/middleware/validate.id-param.js";
 
 const router = express.Router();
 
@@ -28,15 +29,15 @@ router.get("/top", getTopVendors);
 
 // Vendor
 router.get("/me", getMyVendorProfile);
-router.patch("/me", updateVendorProfile);
+router.patch("/me", validateRequest(updateVendorProfileSchema), updateVendorProfile);
 router.get("/me/analytics", getVendorAnalytics);
 
 // Admin
-router.post("/:vendorId/verify", verifyVendor);
-router.post("/:vendorId/reject", rejectVendor);
-router.post("/:vendorId/suspend", suspendVendor);
-router.get("/:vendorId/metrics", getVendorMetrics);
+router.post("/:vendorId/verify", validateIdParam("vendorId"), verifyVendor);
+router.post("/:vendorId/reject", validateIdParam("vendorId"), validateRequest(rejectVendorSchema), rejectVendor);
+router.post("/:vendorId/suspend", validateIdParam("vendorId"), suspendVendor);
+router.get("/:vendorId/metrics", validateIdParam("vendorId"), getVendorMetrics);
 
-router.get("/:vendorId", getVendorProfile);
+router.get("/:vendorId", validateIdParam("vendorId"), getVendorProfile);
 
 export default router;

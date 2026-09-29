@@ -31,3 +31,7 @@ export const resetPasswordSchema = z.object({
     .min(5, "Password must be at least 5 characters")
     .max(100, "Password cannot exceed 100 characters"),
 });
+
+export const tokenQuerySchema = z.object({
+  token: z.string().min(1, "Token is required").max(512),
+});

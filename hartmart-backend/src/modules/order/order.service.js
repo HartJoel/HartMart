@@ -3,6 +3,8 @@ import { nanoid } from "nanoid";
 import AppError from "../../shared/utils/AppError.js";
 import VendorRepository from "../vendor/vendor.repository.js";
 import NotificationService from "../notification/notification.service.js";
+import EventService from "../../events/eventService.js";
+import EventTypes from "../../events/eventTypes.js";
 
 class OrderService {
   static async createOrder(userId, payload) {
@@ -74,45 +76,11 @@ class OrderService {
 
     await OrderRespository.clearCart(userId);
 
-    // 1. Notify CUSTOMER
-    await NotificationService.create({
-      userId,
-      type: "ORDER_CREATED",
-      title: "Order placed successfully",
-      message: `Your order ${order.orderNumber} has been placed.`,
-      actionUrl: `/orders/${order.id}`,
-      metadata: {
-        orderId: order.id,
-      },
+    EventService.emit(EventTypes.ORDER_CREATED, {
+      order,
+      orderItems,
+      customerId: userId,
     });
-
-    const vendorIds = new Set();
-
-    for (const item of orderItems) {
-      if (item.vendorId) {
-        vendorIds.add(item.vendorId);
-      }
-    }
-
-    console.log("ORDER ITEMS:", cartItems);
-
-    // 2. Notify VENDORS
-    for (const item of orderItems) {
-      const vendor = await VendorRepository.findById(item.vendorId);
-
-      console.log("VENDOR LOOKUP:", vendor);
-
-      await NotificationService.create({
-        userId: vendor.userId,
-        type: "NEW_ORDER",
-        title: "New Order Received",
-        message: "You have received a new order.",
-        actionUrl: `/vendor/orders/${order.id}`,
-        metadata: {
-          orderId: order.id,
-        },
-      });
-    }
 
     return order;
   }
@@ -136,7 +104,15 @@ class OrderService {
   }
 
   static async updateOrderStatus(orderId, status) {
-    return OrderRespository.updateStatus(orderId, status);
+    const order = await OrderRespository.updateStatus(orderId, status);
+    EventService.emit(EventTypes.ORDER_STATUS_UPDATED, { userId: order.customerId, order, status });
+    if (status === "SHIPPED") {
+      EventService.emit(EventTypes.ORDER_SHIPPED, { userId: order.customerId, order });
+    }
+    if (status === "DELIVERED") {
+      EventService.emit(EventTypes.ORDER_DELIVERED, { userId: order.customerId, order });
+    }
+    return order;
   }
 }
 

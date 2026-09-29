@@ -3,6 +3,9 @@ import slugify from "slugify";
 import crypto from "crypto";
 import { prisma } from "../../config/db.js";
 import UserRepository from "../user/user.repository.js";
+import EventService from "../../events/eventService.js";
+import EventTypes from "../../events/eventTypes.js";
+import AppError from "../../shared/utils/AppError.js";
 
 class VendorService {
   static async applyAsVendor(userId, data) {
@@ -24,7 +27,7 @@ class VendorService {
 
     await UserRepository.upadateRole(userId);
 
-    return await VendorRepository.create({
+    const vendor = await VendorRepository.create({
       userId,
 
       storeName: data.storeName,
@@ -47,6 +50,8 @@ class VendorService {
 
       bankCode: data.bankCode,
     });
+    EventService.emit(EventTypes.VENDOR_APPLIED, { userId, vendorId: vendor.id, vendor });
+    return vendor;
   }
 
   static async getVendorProfile(vendorId) {
@@ -59,8 +64,9 @@ class VendorService {
 
   static async updateVendorProfile(userId, data) {
     const vendor = await VendorRepository.findUserId(userId);
-
-    return VendorRepository.updateVendor(vendor.id, data);
+    const updatedVendor = await VendorRepository.updateVendor(vendor.id, data);
+    EventService.emit(EventTypes.VENDOR_UPDATED, { userId, vendorId: vendor.id, vendor: updatedVendor });
+    return updatedVendor;
   }
 
   static async getAllVendors() {
@@ -68,15 +74,21 @@ class VendorService {
   }
 
   static async verifyVendor(vendorId) {
-    return VendorRepository.verifyVendor(vendorId);
+    const vendor = await VendorRepository.verifyVendor(vendorId);
+    EventService.emit(EventTypes.VENDOR_VERIFIED, { userId: vendor.userId, vendorId, vendor });
+    return vendor;
   }
 
   static async rejectVendor(vendorId, reason) {
-    return VendorRepository.rejectVendor(vendorId, reason);
+    const vendor = await VendorRepository.rejectVendor(vendorId, reason);
+    EventService.emit(EventTypes.VENDOR_REJECTED, { userId: vendor.userId, vendorId, vendor, reason });
+    return vendor;
   }
 
   static async suspendVendor(vendorId) {
-    return VendorRepository.suspendVendor(vendorId);
+    const vendor = await VendorRepository.suspendVendor(vendorId);
+    EventService.emit(EventTypes.VENDOR_SUSPENDED, { userId: vendor.userId, vendorId, vendor });
+    return vendor;
   }
 
   static async getVendorAnalytics(userId) {

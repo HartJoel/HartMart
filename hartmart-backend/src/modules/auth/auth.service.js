@@ -8,6 +8,8 @@ import {
 } from "../../shared/utils/generate.token.js";
 import AppError from "../../shared/utils/AppError.js";
 import logger from "../../shared/utils/logger.js";
+import EventService from "../../events/eventService.js";
+import EventTypes from "../../events/eventTypes.js";
 
 class AuthService {
   // REGISTER USER
@@ -75,6 +77,11 @@ class AuthService {
         ip: requestMeta.ip,
         userAgent: requestMeta.userAgent,
       });
+      EventService.emit(EventTypes.USER_REGISTERED, {
+        user,
+        ipAddress: requestMeta.ip,
+        userAgent: requestMeta.userAgent,
+      });
 
       return { user };
     } catch (error) {
@@ -115,6 +122,11 @@ class AuthService {
         email: updatedUser.email,
         timestamp: new Date(),
         ip: requestMeta.ip,
+        userAgent: requestMeta.userAgent,
+      });
+      EventService.emit(EventTypes.USER_EMAIL_VERIFIED, {
+        user: updatedUser,
+        ipAddress: requestMeta.ip,
         userAgent: requestMeta.userAgent,
       });
 
@@ -200,6 +212,12 @@ class AuthService {
         role: user.role,
         timestamp: new Date(),
         ip: requestMeta.ip,
+        userAgent: requestMeta.userAgent,
+      });
+
+      EventService.emit(EventTypes.USER_LOGGED_IN, {
+        user: user.id,
+        ipAddress: requestMeta.ip,
         userAgent: requestMeta.userAgent,
       });
 

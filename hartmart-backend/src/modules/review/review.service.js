@@ -1,10 +1,15 @@
 import ReviewRespository from "./review.repository.js";
 import VendorRepository from "../vendor/vendor.repository.js";
 import AppError from "../../shared/utils/AppError.js";
+import EventService from "../../events/eventService.js";
+import EventTypes from "../../events/eventTypes.js";
+import ProductRepository from "../product/product.repository.js";
 
 class ReviewService {
   static async addReviewService(payload) {
     const { productId, userId, orderId } = payload;
+
+    const product = await ProductRepository.findbyId(productId);
 
     const existingReview = await ReviewRespository.hasReviewed(
       productId,
@@ -18,7 +23,15 @@ class ReviewService {
       );
     }
 
-    return await ReviewRespository.createReview(payload);
+    const review = await ReviewRespository.createReview(payload);
+
+    EventService.emit(EventTypes.REVIEW_POSTED, {
+      review,
+      product,
+      customerId: review.userId,
+      vendorId: product.vendorId,
+    });
+    return review;
   }
 
   static async getReviews(productId) {
@@ -41,7 +54,16 @@ class ReviewService {
       );
     }
 
-    return await ReviewRespository.createVendorResponse(reviewId, response);
+    const updatedReview = await ReviewRespository.createVendorResponse(reviewId, response);
+
+    EventService.emit(EventTypes.REVIEW_RESPONSE, {
+      review,
+      product: review.product,
+      customerId: review.userId,
+      vendorId: vendor.id,
+      vendorUserId: userId,
+    });
+    return updatedReview;
   }
 
   static async updateReview(userId, reviewId, data) {
@@ -55,10 +77,12 @@ class ReviewService {
       throw new AppError("Unauthorized", 403);
     }
 
-    return ReviewRespository.updateReview(reviewId, {
+    const updatedReview = await ReviewRespository.updateReview(reviewId, {
       rating: data.rating,
       comment: data.comment,
     });
+    EventService.emit(EventTypes.REVIEW_UPDATED, { userId, review: updatedReview });
+    return updatedReview;
   }
 
   static async deleteReview(userId, reviewId) {
@@ -73,6 +97,7 @@ class ReviewService {
     }
 
     await ReviewRespository.deleteReview(reviewId);
+    EventService.emit(EventTypes.REVIEW_DELETED, { userId, review });
   }
 
   static async toggleHelpful(reviewId, userId) {
@@ -96,7 +121,6 @@ class ReviewService {
       };
     }
 
-    // 👍 ADD LIKE
     await ReviewRespository.addVote(reviewId, userId);
 
     const count = await ReviewRespository.countVotes(reviewId);

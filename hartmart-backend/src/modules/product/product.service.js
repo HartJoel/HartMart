@@ -6,7 +6,8 @@ import CategoryRepository from "../category/category.repository.js";
 import { prisma } from "../../config/db.js";
 import { uploadProductToCloudinary } from "../../shared/utils/uploadToCloudinary.js";
 import AppError from "../../shared/utils/AppError.js";
-import AuditService from "../audit/audit.service.js";
+import EventService from "../../events/eventService.js";
+import EventTypes from "../../events/eventTypes.js";
 
 class ProductService {
   static async createProduct(vendorUserId, data, file, context = {}) {
@@ -60,19 +61,7 @@ class ProductService {
       attributes: data.attributes,
     });
 
-    await AuditService.log({
-      userId: vendorUserId, 
-      vendorId: vendor.id, 
-      action: "CREATE",
-      resource: "product",
-      resourceId: product.id,
-      description: "Product created",
-      metadata: {
-        productName: product.name,
-      },
-      ipAddress: context.ipAddress,
-      userAgent: context.userAgent,
-    });
+    EventService.emit(EventTypes.PRODUCT_CREATED, { userId: vendorUserId, vendorId: vendor.id, product, ...context });
 
     return product;
   }
@@ -106,7 +95,7 @@ class ProductService {
     return product;
   }
 
-  static async updateProduct(productId, userId, data) {
+  static async updateProduct(productId, userId, data, context = {}) {
     const vendor = await VendorRepository.findUserId(userId);
 
     if (!vendor) {
@@ -152,7 +141,9 @@ class ProductService {
       ...(slug && { slug }),
     };
 
-    return await ProductRepository.updateProduct(productId, updatedData);
+    const updatedProduct = await ProductRepository.updateProduct(productId, updatedData);
+    EventService.emit(EventTypes.PRODUCT_UPDATED, { userId, vendorId: vendor.id, product: updatedProduct, ...context });
+    return updatedProduct;
   }
 
   static async getVendorProduct(userId, query) {
@@ -184,7 +175,9 @@ class ProductService {
       throw new Error("Invalid stock values");
     }
 
-    return ProductRepository.updateStock(productId, data);
+    const updatedProduct = await ProductRepository.updateStock(productId, data);
+    EventService.emit(EventTypes.PRODUCT_STOCK_UPDATED, { userId, vendorId: vendor.id, product: updatedProduct, metadata: { totalStock: data.totalStock, reservedStock: data.reservedStock } });
+    return updatedProduct;
   }
 
   static async deleteProduct(productId, userId) {
@@ -208,7 +201,9 @@ class ProductService {
       throw new Error("Product already deleted");
     }
 
-    return await ProductRepository.softDeleteProduct(productId);
+    const deleted = await ProductRepository.softDeleteProduct(productId);
+    EventService.emit(EventTypes.PRODUCT_DELETED, { userId, vendorId: vendor.id, product });
+    return deleted;
   }
 }
 

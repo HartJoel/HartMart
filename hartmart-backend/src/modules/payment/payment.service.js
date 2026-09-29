@@ -3,6 +3,8 @@ import OrderRepository from "../order/order.repository.js";
 import PaystackService from "../../integrations/paystack/paystack.service.js";
 import crypto from "crypto";
 import AppError from "../../shared/utils/AppError.js";
+import EventService from "../../events/eventService.js";
+import EventTypes from "../../events/eventTypes.js";
 
 class PaymentService {
   static async initializePayment(userId, payload, requestMeta = {}) {
@@ -172,6 +174,11 @@ class PaymentService {
         gatewayResponse: transaction,
       });
 
+      if (transaction.status === "failed") {
+        const order = await OrderRepository.findById(payment.orderId);
+        EventService.emit(EventTypes.PAYMENT_FAILED, { payment: updatedPayment, order, userId: payment.userId });
+      }
+
       return {
         paymentId: payment.id,
         reference: payment.reference,
@@ -196,6 +203,8 @@ class PaymentService {
       // gatewayResponse: transaction,
       paidAt: new Date(),
     });
+    const order = await OrderRepository.findById(updatedPayment.orderId);
+    EventService.emit(EventTypes.PAYMENT_RECEIVED, { payment: updatedPayment, order, userId: updatedPayment.userId });
 
     return {
       paymentId: updatedPayment.id,

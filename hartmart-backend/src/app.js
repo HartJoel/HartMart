@@ -2,6 +2,13 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import { config } from "dotenv";
 import { connectDB, disconnectDB } from "./config/db.js";
+import registerNotificationListeners from "./events/listeners/notificationListeners.js";
+import registerAuditListeners from "./events/listeners/auditListeners.js";
+
+
+registerNotificationListeners();
+registerAuditListeners();
+
 
 // Import Routes
 import authRoutes from "./modules/auth/auth.routes.js";

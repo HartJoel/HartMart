@@ -1,6 +1,9 @@
 import crypto from "crypto";
 import PaymentRepository from "./payment.repository.js";
 import AppError from "../../shared/utils/AppError.js";
+import OrderRepository from "../order/order.repository.js";
+import EventService from "../../events/eventService.js";
+import EventTypes from "../../events/eventTypes.js";
 
 class PaymentWebhookService {
   /**
@@ -41,6 +44,9 @@ class PaymentWebhookService {
     switch (event.event) {
       case "charge.success":
         return this.handleChargeSuccess(event);
+
+      case "charge.failed":
+        return this.handleChargeFailed(event);
 
       default:
         // We received a valid Paystack event,
@@ -152,6 +158,9 @@ class PaymentWebhookService {
       },
     );
 
+    const order = await OrderRepository.findById(updatedPayment.orderId);
+    EventService.emit(EventTypes.PAYMENT_RECEIVED, { payment: updatedPayment, order, userId: updatedPayment.userId });
+
     // 8. Update order
     //
     // Add your actual order status method here.
@@ -171,6 +180,28 @@ class PaymentWebhookService {
       reference: updatedPayment.reference,
       status: updatedPayment.status,
     };
+  }
+
+  static async handleChargeFailed(event) {
+    const reference = event.data?.reference;
+    if (!reference) throw new AppError("Paystack webhook does not contain a reference", 400);
+
+    const payment = await PaymentRepository.findByReference(reference);
+    if (!payment) throw new AppError(`Payment not found for reference ${reference}`, 404);
+
+    if (payment.status === "COMPLETED") {
+      return { handled: true, duplicate: true, paymentId: payment.id, reference };
+    }
+
+    const updatedPayment = await PaymentRepository.updateById(payment.id, {
+      status: "FAILED",
+      gatewayTransactionId: event.data.id?.toString(),
+      gatewayResponse: event.data,
+    });
+    const order = await OrderRepository.findById(updatedPayment.orderId);
+    EventService.emit(EventTypes.PAYMENT_FAILED, { payment: updatedPayment, order, userId: updatedPayment.userId });
+
+    return { handled: true, paymentId: updatedPayment.id, reference, status: updatedPayment.status };
   }
 }
 

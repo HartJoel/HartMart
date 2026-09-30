@@ -1,12 +1,12 @@
 import VendorRepository from "./vendor.repository.js";
 import slugify from "slugify";
 import crypto from "crypto";
-import { prisma } from "../../config/db.js";
 import UserRepository from "../user/user.repository.js";
 import EventService from "../../events/eventService.js";
 import EventTypes from "../../events/eventTypes.js";
 import AppError from "../../shared/utils/AppError.js";
 import logger from "../../shared/utils/logger.js";
+import { invalidateCache } from "../../shared/utils/cache.js";
 
 class VendorService {
   static async applyAsVendor(userId, data) {
@@ -27,6 +27,8 @@ class VendorService {
     }
 
     await UserRepository.upadateRole(userId);
+    await invalidateCache("users.profile");
+    await invalidateCache("users.detail");
 
     const vendor = await VendorRepository.create({
       userId,
@@ -51,8 +53,16 @@ class VendorService {
 
       bankCode: data.bankCode,
     });
-    EventService.emit(EventTypes.VENDOR_APPLIED, { userId, vendorId: vendor.id, vendor });
-    logger.info("Vendor application submitted", { userId, vendorId: vendor.id, storeName: vendor.storeName });
+    EventService.emit(EventTypes.VENDOR_APPLIED, {
+      userId,
+      vendorId: vendor.id,
+      vendor,
+    });
+    logger.info("Vendor application submitted", {
+      userId,
+      vendorId: vendor.id,
+      storeName: vendor.storeName,
+    });
     return vendor;
   }
 
@@ -67,7 +77,11 @@ class VendorService {
   static async updateVendorProfile(userId, data) {
     const vendor = await VendorRepository.findUserId(userId);
     const updatedVendor = await VendorRepository.updateVendor(vendor.id, data);
-    EventService.emit(EventTypes.VENDOR_UPDATED, { userId, vendorId: vendor.id, vendor: updatedVendor });
+    EventService.emit(EventTypes.VENDOR_UPDATED, {
+      userId,
+      vendorId: vendor.id,
+      vendor: updatedVendor,
+    });
     logger.info("Vendor profile updated", { userId, vendorId: vendor.id });
     return updatedVendor;
   }
@@ -78,21 +92,38 @@ class VendorService {
 
   static async verifyVendor(vendorId) {
     const vendor = await VendorRepository.verifyVendor(vendorId);
-    EventService.emit(EventTypes.VENDOR_VERIFIED, { userId: vendor.userId, vendorId, vendor });
+    EventService.emit(EventTypes.VENDOR_VERIFIED, {
+      userId: vendor.userId,
+      vendorId,
+      vendor,
+    });
     logger.info("Vendor verified", { vendorId, userId: vendor.userId });
     return vendor;
   }
 
   static async rejectVendor(vendorId, reason) {
     const vendor = await VendorRepository.rejectVendor(vendorId, reason);
-    EventService.emit(EventTypes.VENDOR_REJECTED, { userId: vendor.userId, vendorId, vendor, reason });
-    logger.info("Vendor application rejected", { vendorId, userId: vendor.userId, reasonProvided: Boolean(reason) });
+    EventService.emit(EventTypes.VENDOR_REJECTED, {
+      userId: vendor.userId,
+      vendorId,
+      vendor,
+      reason,
+    });
+    logger.info("Vendor application rejected", {
+      vendorId,
+      userId: vendor.userId,
+      reasonProvided: Boolean(reason),
+    });
     return vendor;
   }
 
   static async suspendVendor(vendorId) {
     const vendor = await VendorRepository.suspendVendor(vendorId);
-    EventService.emit(EventTypes.VENDOR_SUSPENDED, { userId: vendor.userId, vendorId, vendor });
+    EventService.emit(EventTypes.VENDOR_SUSPENDED, {
+      userId: vendor.userId,
+      vendorId,
+      vendor,
+    });
     logger.info("Vendor suspended", { vendorId, userId: vendor.userId });
     return vendor;
   }

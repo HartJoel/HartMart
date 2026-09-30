@@ -2,6 +2,7 @@
 import jwt from "jsonwebtoken";
 import { prisma } from "../../config/db.js";
 import { generateAccessToken } from "../../shared/utils/generate.token.js";
+import logger from "../../shared/utils/logger.js";
 
 export const refreshToken = async (req, res) => {
   try {
@@ -79,7 +80,7 @@ export const refreshToken = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Refresh token error:", error);
+    logger.error("Refresh token request failed", { service: "auth", userId: req.user?.id, ip: req.ip, userAgent: req.get("User-Agent"), errorMessage: error.message, stack: error.stack });
     return res.status(500).json({
       success: false,
       error: "Server error during token refresh",

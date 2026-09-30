@@ -1,6 +1,8 @@
 import asyncHandler from "../../shared/utils/asyncHandler.js";
 import PaymentService from "./payment.service.js";
 import PaymentWebhookService from "./payment.webhook.service.js";
+import logger from "../../shared/utils/logger.js";
+import paymentQueue from "../../queues/payment.queue.js";
 
 const initializePayment = asyncHandler(async (req, res) => {
   const requestMeta = {
@@ -80,7 +82,7 @@ const paystackWebhook = asyncHandler(async (req, res) => {
       success: true,
     });
   } catch (error) {
-    console.error("Paystack webhook error:", error);
+    logger.error("Payment webhook request failed", { service: "payment", eventType: req.body?.event, ip: req.ip, userAgent: req.get("User-Agent"), errorMessage: error.message, stack: error.stack });
 
     return res.status(500).json({
       success: false,

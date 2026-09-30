@@ -25,11 +25,7 @@ class AuthService {
     });
 
     try {
-      console.time("REGISTER TOTAL");
-
-      console.time("DB - FIND USER");
       const userExists = await AuthRepository.findUserByEmail(email);
-      console.timeEnd("DB - FIND USER");
 
       if (userExists) {
         logger.warn("Registration failed - email already exists", {
@@ -42,11 +38,7 @@ class AuthService {
         throw new AppError("User with this email already exists", 409);
       }
 
-      console.time("BCRYPT HASH");
       const hashedPassword = await bcrypt.hash(data.password, 10);
-      console.timeEnd("BCRYPT HASH");
-
-      console.time("CRYPTO TOKEN");
 
       const emailVerificationToken = crypto.randomBytes(32).toString("hex");
 
@@ -54,9 +46,6 @@ class AuthService {
         Date.now() + 24 * 60 * 60 * 1000,
       );
 
-      console.timeEnd("CRYPTO TOKEN");
-
-      console.time("DB - CREATE USER");
 
       const user = await AuthRepository.createUser({
         name,
@@ -66,9 +55,6 @@ class AuthService {
         emailVerificationToken,
         emailVerificationTokenExpires,
       });
-
-      console.timeEnd("DB - CREATE USER");
-      console.timeEnd("REGISTER TOTAL");
 
       logger.info("User registered", {
         userId: user.id,

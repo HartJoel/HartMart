@@ -25,6 +25,7 @@ import reviewRoutes from "./modules/review/review.routes.js";
 import healthRoutes from "./modules/health/health.routes.js";
 import notificationRoutes from "./modules/notification/notification.routes.js";
 import errorMiddleware from "./shared/middleware/error.middleware.js";
+import logger from "./shared/utils/logger.js";
 import adminRoutes from "./modules/admin/admin.routes.js";
 import paymentRoutes from "./modules/payment/payment.routes.js";
 
@@ -58,27 +59,31 @@ app.use(errorMiddleware);
 
 // Handle unhandled promise rejections (e.g., database connection errors)
 process.on("unhandledRejection", (err) => {
-  console.error("Unhandled Rejection:", err);
-  server.close(async () => {
+  logger.error("Unhandled promise rejection", { service: "process", errorMessage: err?.message, stack: err?.stack });
+  const shutdown = async () => {
     await disconnectDB();
     process.exit(1);
-  });
+  };
+  if (app.locals.httpServer) app.locals.httpServer.close(shutdown);
+  else shutdown();
 });
 
 // Handle uncaught exceptions
 process.on("uncaughtException", async (err) => {
-  console.error("Uncaught Exception:", err);
+  logger.error("Uncaught exception", { service: "process", errorMessage: err.message, stack: err.stack });
   await disconnectDB();
   process.exit(1);
 });
 
 // Graceful shutdown
 process.on("SIGTERM", async () => {
-  console.log("SIGTERM received, shutting down gracefully");
-  server.close(async () => {
+  logger.info("Shutdown signal received", { service: "process", signal: "SIGTERM" });
+  const shutdown = async () => {
     await disconnectDB();
     process.exit(0);
-  });
+  };
+  if (app.locals.httpServer) app.locals.httpServer.close(shutdown);
+  else await shutdown();
 });
 
 export default app;

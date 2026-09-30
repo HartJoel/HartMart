@@ -1,6 +1,5 @@
 import crypto from "crypto";
 import redis from "../../config/redis.js";
-import logger from "./logger.js";
 
 const prefix = (process.env.CACHE_KEY_PREFIX || "hartmart").replace(/:+$/, "");
 const enabled = process.env.CACHE_ENABLED !== "false";
@@ -17,13 +16,12 @@ const serializeParts = (parts) => JSON.stringify(parts);
 const digest = (value) => crypto.createHash("sha256").update(value).digest("hex");
 const baseKey = (namespace) => `${prefix}:v1:${namespace}`;
 
-async function safeRedis(operation, details, fallback) {
+async function safeRedis(operation, fallback) {
   const startedAt = Date.now();
   try {
     return await timeout(operation());
   } catch (error) {
     metrics.errors += 1;
-    logger.warn("Cache operation failed", { ...details, errorMessage: error.message });
     return fallback;
   } finally {
     metrics.redisOperations += 1;
@@ -35,31 +33,28 @@ export async function getOrSetCache(namespace, parts, ttlSeconds, loader) {
   if (!enabled || !Number.isFinite(ttlSeconds) || ttlSeconds <= 0) return loader();
 
   const generationKey = `${baseKey(namespace)}:generation`;
-  const generation = await safeRedis(() => redis.get(generationKey), { operation: "generation_read", namespace }, null);
+  const generation = await safeRedis(() => redis.get(generationKey), null);
   const identity = digest(serializeParts(parts));
   const cacheKey = `${baseKey(namespace)}:${generation || "0"}:${identity}`;
-  const cached = await safeRedis(() => redis.get(cacheKey), { operation: "get", namespace }, null);
+  const cached = await safeRedis(() => redis.get(cacheKey), null);
   if (cached !== null) {
     try {
       metrics.hits += 1;
-      logger.info("Cache hit", { namespace });
       return JSON.parse(cached);
     } catch (error) {
-      await safeRedis(() => redis.del(cacheKey), { operation: "corrupt_entry_delete", namespace }, null);
+      await safeRedis(() => redis.del(cacheKey), null);
     }
   }
 
   metrics.misses += 1;
-  logger.info("Cache miss", { namespace });
   if (inFlight.has(cacheKey)) return inFlight.get(cacheKey);
 
   const pending = (async () => {
     const value = await loader();
     if (value !== undefined) {
-      const stored = await safeRedis(() => redis.set(cacheKey, JSON.stringify(value), "EX", ttlSeconds), { operation: "set", namespace }, null);
+      const stored = await safeRedis(() => redis.set(cacheKey, JSON.stringify(value), "EX", ttlSeconds), null);
       if (stored === "OK") {
         metrics.sets += 1;
-        logger.info("Cache set", { namespace, ttlSeconds });
       }
     }
     return value;
@@ -71,11 +66,10 @@ export async function getOrSetCache(namespace, parts, ttlSeconds, loader) {
 export async function invalidateCache(namespace) {
   if (!enabled) return;
   const key = `${baseKey(namespace)}:generation`;
-  const result = await safeRedis(() => redis.incr(key), { operation: "invalidate", namespace }, null);
+  const result = await safeRedis(() => redis.incr(key), null);
   if (result !== null) {
     metrics.invalidations += 1;
     metrics.invalidationsByNamespace[namespace] = (metrics.invalidationsByNamespace[namespace] || 0) + 1;
-    logger.info("Cache invalidated", { namespace });
   }
 }
 

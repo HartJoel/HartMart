@@ -1,7 +1,8 @@
 import winston from "winston";
 
 const logger = winston.createLogger({
-  level: "info",
+  level: process.env.LOG_LEVEL || "info",
+  defaultMeta: { service: "hartmart-api" },
 
 //   format: winston.format.combine(
 //     winston.format.timestamp(),

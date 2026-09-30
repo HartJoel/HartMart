@@ -1,6 +1,5 @@
 import "dotenv/config";
 import Redis from "ioredis";
-import logger from "../shared/utils/logger.js";
 
 const redisUrl = process.env.REDIS_URL;
 
@@ -14,13 +13,5 @@ const redis = new Redis(redisUrl || {
   retryStrategy: (attempt) => Math.min(attempt * 250, 3000),
 });
 
-redis.on("connect", () => logger.info("Redis connected"));
-redis.on("ready", () => logger.info("Redis ready"));
-redis.on("reconnecting", (delay) => logger.warn("Redis reconnecting", { delayMs: delay }));
-redis.on("end", () => logger.warn("Redis connection ended"));
-
-redis.on("error", (error) => {
-  logger.error("Redis error", { errorMessage: error.message, errorCode: error.code });
-});
 
 export default redis;

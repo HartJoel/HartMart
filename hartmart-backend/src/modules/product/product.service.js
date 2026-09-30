@@ -9,7 +9,6 @@ import AppError from "../../shared/utils/AppError.js";
 import EventService from "../../events/eventService.js";
 import EventTypes from "../../events/eventTypes.js";
 import logger from "../../shared/utils/logger.js";
-import { cacheTtl, getOrSetCache, invalidateCache } from "../../shared/utils/cache.js";
 
 class ProductService {
   static async createProduct(vendorUserId, data, file, context = {}) {
@@ -62,9 +61,6 @@ class ProductService {
       dimensions: data.dimensions,
       attributes: data.attributes,
     });
-    await invalidateCache("products.detail");
-    await invalidateCache("products.list");
-    await invalidateCache("categories");
 
     EventService.emit(EventTypes.PRODUCT_CREATED, { userId: vendorUserId, vendorId: vendor.id, product, ...context });
     logger.info("Product created", { productId: product.id, vendorId: vendor.id, userId: vendorUserId, categoryId: product.categoryId, price: Number(product.basePrice) });
@@ -73,7 +69,7 @@ class ProductService {
   }
 
   static async getAllProducts(query) {
-    const result = await getOrSetCache("products.list", [query], cacheTtl.productList, () => ProductRepository.getProducts(query));
+    const result = await ProductRepository.getProducts(query);
 
     const products = result.data ?? result;
 
@@ -97,7 +93,7 @@ class ProductService {
   }
 
   static async getProductById(id) {
-    const product = await getOrSetCache("products.detail", [id], cacheTtl.productDetail, () => ProductRepository.findbyId(id));
+    const product = await ProductRepository.findbyId(id);
     return product;
   }
 
@@ -148,9 +144,6 @@ class ProductService {
     };
 
     const updatedProduct = await ProductRepository.updateProduct(productId, updatedData);
-    await invalidateCache("products.detail");
-    await invalidateCache("products.list");
-    await invalidateCache("categories");
     EventService.emit(EventTypes.PRODUCT_UPDATED, { userId, vendorId: vendor.id, product: updatedProduct, ...context });
     logger.info("Product updated", { productId, vendorId: vendor.id, userId, changedFields: Object.keys(data) });
     return updatedProduct;
@@ -186,9 +179,6 @@ class ProductService {
     }
 
     const updatedProduct = await ProductRepository.updateStock(productId, data);
-    await invalidateCache("products.detail");
-    await invalidateCache("products.list");
-    await invalidateCache("categories");
     EventService.emit(EventTypes.PRODUCT_STOCK_UPDATED, { userId, vendorId: vendor.id, product: updatedProduct, metadata: { totalStock: data.totalStock, reservedStock: data.reservedStock } });
     logger.info("Product stock updated", { productId, vendorId: vendor.id, userId, totalStock: updatedProduct.totalStock, availableStock: updatedProduct.availableStock });
     return updatedProduct;
@@ -216,9 +206,6 @@ class ProductService {
     }
 
     const deleted = await ProductRepository.softDeleteProduct(productId);
-    await invalidateCache("products.detail");
-    await invalidateCache("products.list");
-    await invalidateCache("categories");
     EventService.emit(EventTypes.PRODUCT_DELETED, { userId, vendorId: vendor.id, product });
     logger.info("Product deleted", { productId, vendorId: vendor.id, userId });
     return deleted;

@@ -1,6 +1,4 @@
 import { prisma } from "../../config/db.js";
-import redis from "../../config/redis.js";
-import { getCacheMetrics } from "../../shared/utils/cache.js";
 
 export const healthCheck = async (req, res) => {
   let database = "connected";
@@ -15,9 +13,7 @@ export const healthCheck = async (req, res) => {
     status: database === "connected" ? "healthy" : "unhealthy",
     services: {
       database,
-      redis: redis.status === "ready" ? "connected" : redis.status,
     },
-    cache: getCacheMetrics(),
     timestamp: new Date().toISOString(),
   });
 };

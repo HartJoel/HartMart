@@ -2,24 +2,19 @@ import UserRepository from "./user.repository.js";
 import AppError from "../../shared/utils/AppError.js";
 import { uploadAvatarToCloudinary } from "../../shared/utils/uploadToCloudinary.js";
 import logger from "../../shared/utils/logger.js";
-import { cacheTtl, getOrSetCache, invalidateCache } from "../../shared/utils/cache.js";
 
 class UserService {
   static async getCurrentUser(userId) {
-    const user = await getOrSetCache("users.profile", [userId], cacheTtl.userProfile, async () => {
-      const record = await UserRepository.findById(userId);
-      if (!record) return null;
-      const { password, ...safeRecord } = record;
-      return safeRecord;
-    });
+    const user = await UserRepository.findById(userId);
 
     if (!user) {
       throw new AppError("User not found", 404);
     }
 
+    const { password, ...safeUser } = user;
     logger.info("Current user retrieved", { userId });
 
-    return user;
+    return safeUser;
   }
 
   static async updateProfile(userId, data, file) {
@@ -48,8 +43,6 @@ class UserService {
         name,
         avatarData,
       );
-      await invalidateCache("users.profile");
-      await invalidateCache("users.detail");
       logger.info("User profile updated", { userId, nameChanged: Boolean(name), avatarChanged: Boolean(file) });
 
       return updatedUser;
@@ -59,20 +52,16 @@ class UserService {
   }
 
   static async getUserById(id) {
-    const user = await getOrSetCache("users.detail", [id], cacheTtl.userProfile, async () => {
-      const record = await UserRepository.findById(id);
-      if (!record) return null;
-      const { password, ...safeRecord } = record;
-      return safeRecord;
-    });
+    const user = await UserRepository.findById(id);
 
     if (!user) {
       throw new AppError("User not found", 404);
     }
 
+    const { password, ...result } = user;
     logger.info("User retrieved", { userId: id });
 
-    return user;
+    return result;
   }
 
   static async getAllUsers(query) {

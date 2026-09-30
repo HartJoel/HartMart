@@ -6,10 +6,7 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "worker": "nodemon src/workers/payment.worker.js",
-    "test": "vitest run",
-    "test:unit": "vitest run tests/unit",
-    "test:integration": "vitest run tests/integration",
-    "test:watch": "vitest"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
@@ -17,9 +14,7 @@
   "description": "",
   "devDependencies": {
     "nodemon": "^3.1.14",
-    "prisma": "^6.19.0",
-    "supertest": "^7.3.0",
-    "vitest": "^5.0.2"
+    "prisma": "^6.19.0"
   },
   "dependencies": {
     "@json2csv/plainjs": "^7.0.8",

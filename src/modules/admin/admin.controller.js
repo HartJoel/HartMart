@@ -60,7 +60,10 @@ class AdminController {
       userAgent: req.get("User-Agent"),
     };
 
-    const logs = await AdminService.getAuditLogs(req.validatedQuery ?? req.query, requestMeta);
+    const logs = await AdminService.getAuditLogs(
+      req.validatedQuery ?? req.query,
+      requestMeta,
+    );
 
     return res.status(200).json({
       success: true,
@@ -76,7 +79,12 @@ class AdminController {
       userAgent: req.get("User-Agent"),
     };
 
-    const { type, format = "csv", startDate, endDate } = req.validatedQuery ?? req.query;
+    const {
+      type,
+      format = "csv",
+      startDate,
+      endDate,
+    } = req.validatedQuery ?? req.query;
 
     const { csv, filename } = await ExportService.exportData(
       {

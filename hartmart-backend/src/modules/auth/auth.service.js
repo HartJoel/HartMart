@@ -40,20 +40,11 @@ class AuthService {
 
       const hashedPassword = await bcrypt.hash(data.password, 10);
 
-      const emailVerificationToken = crypto.randomBytes(32).toString("hex");
-
-      const emailVerificationTokenExpires = new Date(
-        Date.now() + 24 * 60 * 60 * 1000,
-      );
-
-
       const user = await AuthRepository.createUser({
         name,
         email,
         password: hashedPassword,
-        emailVerified: false,
-        emailVerificationToken,
-        emailVerificationTokenExpires,
+        emailVerified: true,
       });
 
       logger.info("User registered", {
@@ -154,18 +145,6 @@ class AuthService {
         });
 
         throw new AppError("User doesn't exist", 404);
-      }
-
-      if (!user.emailVerified) {
-        logger.warn("Login failed - email not verified", {
-          userId: user.id,
-          email: user.email,
-          ip: requestMeta.ip,
-          userAgent: requestMeta.userAgent,
-          timestamp: new Date(),
-        });
-
-        throw new AppError("Email not verified", 404);
       }
 
       const isPasswordValid = await bcrypt.compare(

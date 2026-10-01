@@ -38,21 +38,33 @@ describe.skipIf(!hasTestDatabase)("Auth register/login HTTP integration", () => 
       .send(payload);
 
     expect(response.status).toBe(201);
+    expect(response.body.data.user).not.toHaveProperty("emailVerificationToken");
     expect(response.body).toMatchObject({
       success: true,
       data: {
         user: {
           name: payload.name,
           email: payload.email,
-          emailVerified: false,
+          emailVerified: true,
         },
       },
     });
 
     const storedUser = await prisma.user.findUnique({ where: { email: payload.email } });
     expect(storedUser).not.toBeNull();
+    expect(storedUser.emailVerified).toBe(true);
+    expect(storedUser.emailVerificationToken).toBeNull();
+    expect(storedUser.emailVerificationTokenExpires).toBeNull();
     expect(storedUser.password).not.toBe(payload.password);
     await expect(bcrypt.compare(payload.password, storedUser.password)).resolves.toBe(true);
+
+    const loginResponse = await request(app)
+      .post("/v1/auth/login")
+      .send({ email: payload.email, password: payload.password });
+
+    expect(loginResponse.status).toBe(200);
+    expect(loginResponse.body.data.user.id).toBe(storedUser.id);
+    expect(loginResponse.body.data.accessToken).toEqual(expect.any(String));
   });
 
   it("returns a conflict when the email is already registered", async () => {
@@ -112,7 +124,7 @@ describe.skipIf(!hasTestDatabase)("Auth register/login HTTP integration", () => 
     expect(refreshTokenCount).toBe(1);
   });
 
-  it("rejects login for an unverified user", async () => {
+  it("allows existing unverified users to log in", async () => {
     const payload = makeRegistrationPayload();
     await prisma.user.create({
       data: {
@@ -127,8 +139,9 @@ describe.skipIf(!hasTestDatabase)("Auth register/login HTTP integration", () => 
       .post("/v1/auth/login")
       .send({ email: payload.email, password: payload.password });
 
-    expect(response.status).toBe(404);
-    expect(response.body.message).toBe("Email not verified");
+    expect(response.status).toBe(200);
+    expect(response.body.data.user.email).toBe(payload.email);
+    expect(response.body.data.accessToken).toEqual(expect.any(String));
   });
 
   it("rejects login for an incorrect password", async () => {

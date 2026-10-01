@@ -21,7 +21,6 @@ const register = asyncHandler(async (req, res) => {
         email: user.email,
         role: user.role,
         emailVerified: user.emailVerified,
-        emailVerificationToken: user.emailVerificationToken,
       },
     },
   });

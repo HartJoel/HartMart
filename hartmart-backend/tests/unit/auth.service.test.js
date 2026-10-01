@@ -31,7 +31,7 @@ describe("AuthService.register", () => {
     vi.clearAllMocks();
   });
 
-  it("creates an unverified user with a hashed password and expiring verification token", async () => {
+  it("creates a verified user with a hashed password and no verification token", async () => {
     const input = {
       name: "Test Customer",
       email: "customer@example.test",
@@ -46,12 +46,9 @@ describe("AuthService.register", () => {
     const { user } = await AuthService.register(input);
 
     expect(user.id).toBe("user_test_1");
-    expect(user.emailVerified).toBe(false);
-    expect(user.emailVerificationToken).toMatch(/^[a-f0-9]{64}$/);
-    expect(user.emailVerificationTokenExpires.getTime()).toBeGreaterThan(Date.now());
-    expect(user.emailVerificationTokenExpires.getTime()).toBeLessThanOrEqual(
-      Date.now() + 24 * 60 * 60 * 1000,
-    );
+    expect(user.emailVerified).toBe(true);
+    expect(user).not.toHaveProperty("emailVerificationToken");
+    expect(user).not.toHaveProperty("emailVerificationTokenExpires");
     expect(user.password).not.toBe(input.password);
     await expect(bcrypt.compare(input.password, user.password)).resolves.toBe(true);
     expect(repository.createUser).toHaveBeenCalledOnce();
@@ -59,6 +56,7 @@ describe("AuthService.register", () => {
       "user.registered",
       expect.objectContaining({ user, ipAddress: undefined }),
     );
+    expect(eventService.emit).toHaveBeenCalledOnce();
   });
 
   it("rejects a duplicate email without creating another user", async () => {
@@ -126,18 +124,24 @@ describe("AuthService.login", () => {
     expect(repository.createRefreshToken).not.toHaveBeenCalled();
   });
 
-  it("rejects a user whose email has not been verified", async () => {
+  it("allows an existing unverified user to log in with a valid password", async () => {
+    const password = "Correct-Horse-42";
     repository.findUserByEmail.mockResolvedValue({
       id: "unverified_user",
       email: "unverified@example.test",
-      password: "unused",
+      password: await bcrypt.hash(password, 4),
+      role: "CUSTOMER",
       emailVerified: false,
     });
 
-    await expect(
-      AuthService.login({ email: "unverified@example.test", password: "secret" }),
-    ).rejects.toMatchObject({ message: "Email not verified", statusCode: 404 });
-    expect(repository.createRefreshToken).not.toHaveBeenCalled();
+    const result = await AuthService.login({ email: "unverified@example.test", password });
+
+    expect(result.user.emailVerified).toBe(false);
+    expect(jwt.verify(result.accessToken, process.env.JWT_SECRET)).toMatchObject({
+      id: "unverified_user",
+      role: "CUSTOMER",
+    });
+    expect(repository.createRefreshToken).toHaveBeenCalledOnce();
   });
 
   it("rejects an incorrect password", async () => {

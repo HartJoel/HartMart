@@ -1,51 +1,25 @@
-import jwt from "jsonwebtoken";
+import { sendErrorResponse } from "../utils/error-response.js";
 
-/**
- * Middleware to check if user has specific role
- *
- * Usage: router.delete('/admin/user', authMiddleware, requireRole('admin'), controller)
- */
-export const requireRole = (requiredRole) => {
-  return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        error: "No user authenticated",
-      });
-    }
+export const requireRole = (requiredRole) => (req, res, next) => {
+  if (!req.user) {
+    return sendErrorResponse(res, 401, "Authentication is required. Please sign in.");
+  }
 
-    if (req.user.role !== requiredRole) {
-      return res.status(403).json({
-        success: false,
-        error: `Access denied. Required role: ${requiredRole}`,
-      });
-    }
+  if (req.user.role !== requiredRole) {
+    return sendErrorResponse(res, 403, "You do not have permission to perform this action.");
+  }
 
-    next();
-  };
+  next();
 };
 
-/**
- * Middleware to check if user has any of the provided roles
- *
- * Usage: router.delete('/admin/user', authMiddleware, requireRoles(['admin', 'moderator']), controller)
- */
-export const requireRoles = (allowedRoles) => {
-  return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        error: "No user authenticated",
-      });
-    }
+export const requireRoles = (allowedRoles) => (req, res, next) => {
+  if (!req.user) {
+    return sendErrorResponse(res, 401, "Authentication is required. Please sign in.");
+  }
 
-    if (!allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({
-        success: false,
-        error: "Access denied",
-      });
-    }
+  if (!allowedRoles.includes(req.user.role)) {
+    return sendErrorResponse(res, 403, "You do not have permission to perform this action.");
+  }
 
-    next();
-  };
+  next();
 };

@@ -1,5 +1,6 @@
 import NotificationService from "./notification.service.js";
 import asyncHandler from "../../shared/utils/asyncHandler.js";
+import AppError from "../../shared/utils/AppError.js";
 
 const getNotifications = asyncHandler(async (req, res) => {
   const userId = req.user.id;
@@ -19,10 +20,7 @@ const getNotificationById = asyncHandler(async (req, res) => {
   const notification = await NotificationService.getById(notificationId);
 
   if (notification.userId !== userId) {
-    return res.status(403).json({
-      success: false,
-      message: "Forbidden",
-    });
+    throw new AppError("You do not have permission to view this notification.", 403);
   }
 
   res.status(200).json({

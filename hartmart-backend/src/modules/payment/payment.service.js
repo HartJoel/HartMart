@@ -28,7 +28,7 @@ class PaymentService {
 
     // 4. Don't allow payment if already completed
     if (existingPayment && existingPayment.status === "COMPLETED") {
-      throw new AppError("Order has already been paid", 400);
+      throw new AppError("This order has already been paid.", 409);
     }
 
     // 5. Generate a NEW reference for this attempt
@@ -158,13 +158,19 @@ class PaymentService {
     }
 
     // 5. Verify transaction with Paystack
-    const verification = await PaystackService.verifyTransaction(
-      payment.reference,
-    );
+    let verification;
+    try {
+      verification = await PaystackService.verifyTransaction(payment.reference);
+    } catch {
+      throw new AppError(
+        "The payment provider is temporarily unavailable. Please try again.",
+        502,
+      );
+    }
 
     // 6. Check Paystack response
     if (!verification.status) {
-      throw new AppError("Unable to verify payment", 400);
+      throw new AppError("The payment provider could not verify this transaction.", 502);
     }
 
     const transaction = verification.data;
@@ -195,7 +201,7 @@ class PaymentService {
     const expectedAmount = Math.round(Number(payment.amount) * 100);
 
     if (Number(transaction.amount) !== expectedAmount) {
-      throw new AppError("Payment amount does not match order amount", 400);
+      throw new AppError("The verified payment amount does not match the order amount.", 422);
     }
 
     // 9. Payment successful
@@ -249,7 +255,7 @@ class PaymentService {
     const payment = await PaymentRepository.findById(id);
 
     if (!payment) {
-      throw new Error("Payment not found");
+      throw new AppError("Payment not found", 404);
     }
 
     return {

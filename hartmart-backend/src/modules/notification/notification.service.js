@@ -33,7 +33,7 @@ class NotificationService {
     }
 
     if (notification.userId !== userId) {
-      throw new AppError("Forbidden", 403);
+      throw new AppError("You do not have permission to update this notification.", 403);
     }
 
     const updatedNotification = await NotificationRepository.update(notificationId, {
@@ -58,7 +58,7 @@ class NotificationService {
     }
 
     if (notification.userId !== userId) {
-      throw new AppError("Forbidden", 403);
+      throw new AppError("You do not have permission to delete this notification.", 403);
     }
 
     const result = await NotificationRepository.delete(notificationId, userId);

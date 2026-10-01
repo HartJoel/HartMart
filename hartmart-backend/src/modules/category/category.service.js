@@ -47,6 +47,10 @@ class CategoryService {
       cacheTtl.categoryDetail,
       () => CategoryRepository.findById(id),
     );
+    if (!category) {
+      throw new AppError("Category not found.", 404);
+    }
+
     logger.info("Category retrieved", {
       categoryId: id,
       found: Boolean(category),

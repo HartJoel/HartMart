@@ -1,4 +1,6 @@
 import jwt from "jsonwebtoken";
+import logger from "../utils/logger.js";
+import { sendErrorResponse } from "../utils/error-response.js";
 
 export const authMiddleware = (req, res, next) => {
   try {
@@ -9,10 +11,7 @@ export const authMiddleware = (req, res, next) => {
         ip: req.ip,
         route: req.originalUrl,
       });
-      return res.status(401).json({
-        success: false,
-        error: "No access token provided. Please login.",
-      });
+      return sendErrorResponse(res, 401, "Authentication is required. Please sign in.");
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -22,15 +21,13 @@ export const authMiddleware = (req, res, next) => {
     next();
   } catch (error) {
     if (error.name === "TokenExpiredError") {
-      return res.status(401).json({
-        success: false,
-        error: "Access token expired. Please refresh.",
-      });
+      return sendErrorResponse(res, 401, "Your access token has expired. Refresh it or sign in again.", "TOKEN_EXPIRED");
     }
 
-    return res.status(401).json({
-      success: false,
-      error: "Invalid access token",
-    });
+    if (["JsonWebTokenError", "NotBeforeError"].includes(error.name)) {
+      return sendErrorResponse(res, 401, "The access token is invalid. Please sign in again.");
+    }
+
+    next(error);
   }
 };

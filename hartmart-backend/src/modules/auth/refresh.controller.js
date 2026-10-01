@@ -3,26 +3,28 @@ import jwt from "jsonwebtoken";
 import { prisma } from "../../config/db.js";
 import { generateAccessToken } from "../../shared/utils/generate.token.js";
 import logger from "../../shared/utils/logger.js";
+import { sendErrorResponse } from "../../shared/utils/error-response.js";
 
 export const refreshToken = async (req, res) => {
   try {
     const refreshTokenCookie = req.cookies.refreshToken;
 
     if (!refreshTokenCookie) {
-      return res.status(401).json({
-        success: false,
-        error: "No refresh token provided",
-      });
+      return sendErrorResponse(res, 401, "Authentication is required. Please sign in.");
     }
 
     let decoded;
     try {
       decoded = jwt.verify(refreshTokenCookie, process.env.JWT_REFRESH_SECRET);
     } catch (error) {
-      return res.status(401).json({
-        success: false,
-        error: "Invalid refresh token",
-      });
+      const expired = error.name === "TokenExpiredError";
+      if (expired) {
+        return sendErrorResponse(res, 401, "Your refresh token has expired. Please sign in again.", "TOKEN_EXPIRED");
+      }
+      if (["JsonWebTokenError", "NotBeforeError"].includes(error.name)) {
+        return sendErrorResponse(res, 401, "The refresh token is invalid. Please sign in again.");
+      }
+      throw error;
     }
 
     const storedToken = await prisma.refreshToken.findUnique({
@@ -30,10 +32,7 @@ export const refreshToken = async (req, res) => {
     });
 
     if (!storedToken) {
-      return res.status(401).json({
-        success: false,
-        error: "Refresh token not found in database",
-      });
+      return sendErrorResponse(res, 401, "The refresh token is no longer valid. Please sign in again.");
     }
 
     if (storedToken.expiresAt < new Date()) {
@@ -41,10 +40,7 @@ export const refreshToken = async (req, res) => {
         where: { token: refreshTokenCookie },
       });
 
-      return res.status(401).json({
-        success: false,
-        error: "Refresh token has expired",
-      });
+      return sendErrorResponse(res, 401, "Your refresh token has expired. Please sign in again.", "TOKEN_EXPIRED");
     }
 
     const user = await prisma.user.findUnique({
@@ -56,10 +52,7 @@ export const refreshToken = async (req, res) => {
         where: { token: refreshTokenCookie },
       });
 
-      return res.status(401).json({
-        success: false,
-        error: "User not found",
-      });
+      return sendErrorResponse(res, 401, "The refresh token is no longer valid. Please sign in again.");
     }
 
     const newAccessToken = generateAccessToken(user.id, user.role);
@@ -81,9 +74,6 @@ export const refreshToken = async (req, res) => {
     });
   } catch (error) {
     logger.error("Refresh token request failed", { service: "auth", userId: req.user?.id, ip: req.ip, userAgent: req.get("User-Agent"), errorMessage: error.message, stack: error.stack });
-    return res.status(500).json({
-      success: false,
-      error: "Server error during token refresh",
-    });
+    return sendErrorResponse(res, 500, "Unable to refresh your session due to a server error.");
   }
 };

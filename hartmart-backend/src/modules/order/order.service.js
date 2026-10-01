@@ -12,13 +12,13 @@ class OrderService {
     const cartItems = await OrderRespository.getCart(userId);
 
     if (!cartItems.length) {
-      throw new AppError("Cart is empty", 404);
+      throw new AppError("Your cart is empty. Add an item before placing an order.", 400);
     }
 
     const address = await OrderRespository.getDefaultAddress(userId);
 
     if (!address) {
-      throw new AppError("No default address found", 404);
+      throw new AppError("Add a default shipping address before placing an order.", 409);
     }
 
     let subtotal = 0;
@@ -92,7 +92,9 @@ class OrderService {
   }
 
   static async getOrder(orderId) {
-    return await OrderRespository.findById(orderId);
+    const order = await OrderRespository.findById(orderId);
+    if (!order) throw new AppError("Order not found.", 404);
+    return order;
   }
 
   static async getUserOrders(userId) {

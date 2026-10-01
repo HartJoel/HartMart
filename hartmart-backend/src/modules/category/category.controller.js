@@ -5,7 +5,8 @@ const createCategory = asyncHandler(async (req, res) => {
   const category = await CategoryService.createCategory(req.body);
 
   res.status(201).json({
-    success: "true",
+    success: true,
+    message: "Category created successfully.",
     data: category,
   });
 });
@@ -13,8 +14,9 @@ const createCategory = asyncHandler(async (req, res) => {
 const getCategories = asyncHandler(async (req, res) => {
   const categories = await CategoryService.list();
 
-  res.status(201).json({
-    success: "true",
+  res.status(200).json({
+    success: true,
+    message: "Categories retrieved successfully.",
     data: categories,
   });
 });
@@ -24,6 +26,7 @@ const getCategory = asyncHandler(async (req, res) => {
 
   res.status(200).json({
     success: true,
+    message: "Category retrieved successfully.",
     data,
   });
 });
@@ -33,6 +36,7 @@ const updateCategory = asyncHandler(async (req, res) => {
 
   res.status(200).json({
     success: true,
+    message: "Category updated successfully.",
     data,
   });
 });

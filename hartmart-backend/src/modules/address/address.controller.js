@@ -6,8 +6,7 @@ const createAddress = asyncHandler(async (req, res) => {
 
   res.status(201).json({
     success: true,
-    message: "Address Created",
-    message: "Add new address to profile",
+    message: "Address created successfully.",
     data: address,
   });
 });
@@ -21,7 +20,7 @@ const updateAddress = asyncHandler(async (req, res) => {
 
   res.status(200).json({
     success: true,
-    message: "Operation completed successfully",
+    message: "Address updated successfully.",
     data: address,
   });
 });
@@ -31,7 +30,7 @@ const getUserAddresses = asyncHandler(async (req, res) => {
 
   res.status(200).json({
     success: true,
-    message: "Get Users Addresses",
+    message: "Addresses retrieved successfully.",
     data: addresses,
   });
 });

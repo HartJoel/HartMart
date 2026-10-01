@@ -120,7 +120,7 @@ describe("AuthService.login", () => {
 
     await expect(
       AuthService.login({ email: "missing@example.test", password: "secret" }),
-    ).rejects.toMatchObject({ message: "User doesn't exist", statusCode: 404 });
+    ).rejects.toMatchObject({ message: "Invalid email or password", statusCode: 401 });
     expect(repository.createRefreshToken).not.toHaveBeenCalled();
   });
 
@@ -154,7 +154,7 @@ describe("AuthService.login", () => {
 
     await expect(
       AuthService.login({ email: "verified@example.test", password: "wrong-password" }),
-    ).rejects.toMatchObject({ message: "Invalid email or password", statusCode: 404 });
+    ).rejects.toMatchObject({ message: "Invalid email or password", statusCode: 401 });
     expect(repository.createRefreshToken).not.toHaveBeenCalled();
   });
 });

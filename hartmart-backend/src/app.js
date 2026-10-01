@@ -26,6 +26,7 @@ import healthRoutes from "./modules/health/health.routes.js";
 import notificationRoutes from "./modules/notification/notification.routes.js";
 import errorMiddleware from "./shared/middleware/error.middleware.js";
 import logger from "./shared/utils/logger.js";
+import { sendErrorResponse } from "./shared/utils/error-response.js";
 import adminRoutes from "./modules/admin/admin.routes.js";
 import paymentRoutes from "./modules/payment/payment.routes.js";
 
@@ -55,6 +56,7 @@ app.use("/v1/admin", adminRoutes);
 app.use("/v1/payment", paymentRoutes);
 app.use("/api", healthRoutes);
 
+app.use((req, res) => sendErrorResponse(res, 404, "The requested API route was not found."));
 app.use(errorMiddleware);
 
 // Handle unhandled promise rejections (e.g., database connection errors)

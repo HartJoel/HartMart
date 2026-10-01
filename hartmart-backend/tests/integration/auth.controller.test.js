@@ -159,7 +159,7 @@ describe.skipIf(!hasTestDatabase)("Auth register/login HTTP integration", () => 
       .post("/v1/auth/login")
       .send({ email: payload.email, password: "Wrong-Password-42" });
 
-    expect(response.status).toBe(404);
+    expect(response.status).toBe(401);
     expect(response.body.message).toBe("Invalid email or password");
   });
 });

@@ -8,7 +8,7 @@ class CartService {
     const product = await ProductRepository.findbyId(data.productId);
 
     if (!product) {
-      throw new AppError("Product not Found", 404);
+      throw new AppError("The selected product was not found.", 404);
     }
 
     const existing = await CartRespository.findItem(userId, data.productId);
@@ -20,7 +20,7 @@ class CartService {
       const product = await ProductRepository.findbyId(data.productId);
 
       if (newQuantity > product.availableStock) {
-        throw new Error("Not enough stock available");
+        throw new AppError("The requested quantity exceeds available stock.", 409);
       }
 
       const item = await CartRespository.updateQuantity(existing.id, newQuantity);
@@ -57,7 +57,7 @@ class CartService {
 
   static async updateCartItem(cartItemId, quantity) {
     if (quantity <= 0) {
-      throw new Error("Quantity must be greater than 0");
+      throw new AppError("Quantity must be greater than zero.", 400);
     }
 
     const item = await CartRespository.updateQuantity(cartItemId, quantity);

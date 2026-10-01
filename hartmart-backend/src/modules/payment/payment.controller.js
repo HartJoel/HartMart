@@ -3,6 +3,7 @@ import PaymentService from "./payment.service.js";
 import PaymentWebhookService from "./payment.webhook.service.js";
 import logger from "../../shared/utils/logger.js";
 import paymentQueue from "../../queues/payment.queue.js";
+import { sendErrorResponse } from "../../shared/utils/error-response.js";
 
 const initializePayment = asyncHandler(async (req, res) => {
   const requestMeta = {
@@ -44,19 +45,13 @@ const paystackWebhook = asyncHandler(async (req, res) => {
     const rawBody = req.rawBody;
 
     if (!rawBody) {
-      return res.status(400).json({
-        success: false,
-        message: "Raw request body is required",
-      });
+      return sendErrorResponse(res, 400, "The raw request body is required to verify this webhook.");
     }
 
     const isValid = PaymentWebhookService.verifySignature(rawBody, signature);
 
     if (!isValid) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid Paystack signature",
-      });
+      return sendErrorResponse(res, 401, "The Paystack webhook signature is invalid.");
     }
 
     // Don't process payment here.
@@ -84,9 +79,7 @@ const paystackWebhook = asyncHandler(async (req, res) => {
   } catch (error) {
     logger.error("Payment webhook request failed", { service: "payment", eventType: req.body?.event, ip: req.ip, userAgent: req.get("User-Agent"), errorMessage: error.message, stack: error.stack });
 
-    return res.status(500).json({
-      success: false,
-    });
+    return sendErrorResponse(res, 500, "The payment webhook could not be processed.");
   }
 });
 

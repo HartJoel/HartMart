@@ -1,6 +1,7 @@
 import AuthService from "./auth.service.js";
 import asyncHandler from "../../shared/utils/asyncHandler.js";
 import { setAuthCookies } from "../../shared/utils/generate.token.js";
+import { sendErrorResponse } from "../../shared/utils/error-response.js";
 
 const register = asyncHandler(async (req, res) => {
   const requestMeta = {
@@ -36,10 +37,7 @@ const verifyEmail = asyncHandler(async (req, res) => {
   };
 
   if (!token) {
-    return res.status(400).json({
-      success: false,
-      error: "Verification token is required",
-    });
+    return sendErrorResponse(res, 400, "The verification token is required.");
   }
   const result = await AuthService.verifyEmail(token, requestMeta);
 

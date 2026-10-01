@@ -16,7 +16,7 @@ export const createReview = asyncHandler(async (req, res) => {
 export const getReviews = asyncHandler(async (req, res) => {
   const reviews = await ReviewService.getReviews(req.params.productId);
 
-  return res.status(201).json({
+  return res.status(200).json({
     success: true,
     message: "Product reviews retrieved successfully",
     data: reviews,
@@ -30,9 +30,9 @@ export const respondToReview = asyncHandler(async (req, res) => {
     req.body.response,
   );
 
-  return res.status(201).json({
+  return res.status(200).json({
     success: true,
-    message: "Vendor responds successfully",
+    message: "Response added to review successfully.",
     data: reviewRespond,
   });
 });

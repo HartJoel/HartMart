@@ -4,8 +4,8 @@ import asyncHandler from "../../shared/utils/asyncHandler.js";
 const addToCart = asyncHandler(async (req, res) => {
   const item = await CartService.addToCart(req.user.id, req.body);
   res.status(201).json({
-    success: "true",
-    message: "Add product to shopping cart",
+    success: true,
+    message: "Product added to cart successfully.",
     data: item,
   });
 });

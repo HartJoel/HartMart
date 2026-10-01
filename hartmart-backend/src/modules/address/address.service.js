@@ -13,7 +13,7 @@ class AddressService {
       }
 
       if (existingAddresses >= 5) {
-        throw new AppError("Maximum address limit reached", 404);
+        throw new AppError("You can save up to five addresses.", 409);
       }
       const address = await AddressRepository.create({
         ...data,
@@ -39,7 +39,7 @@ class AddressService {
       }
 
       if (address.userId !== userId) {
-        throw new AppError("Unauthorized", 404);
+        throw new AppError("Address not found", 404);
       }
 
       const updatedAddress = await AddressRepository.update(addressId, data);
@@ -65,7 +65,7 @@ class AddressService {
       }
 
       if (address.userId !== userId) {
-        throw new AppError("Unauthorized", 404);
+        throw new AppError("Address not found", 404);
       }
 
       await AddressRepository.delete(addressId);

@@ -1,17 +1,17 @@
+import { sendErrorResponse } from "../utils/error-response.js";
+
 export const validateRequest = (schema, source = "body") => {
   return (req, res, next) => {
     const result = schema.safeParse(req[source] ?? {});
 
     if (!result.success) {
-      const formatted = result.error.format();
+      const message = result.error.issues
+        .map(({ path, message: issueMessage }) =>
+          (path.length ? path.join(".") : "request") + ": " + issueMessage,
+        )
+        .join(", ");
 
-      const flatErrors = Object.values(formatted)
-        .flat()
-        .filter(Boolean)
-        .map((err) => err._errors)
-        .flat();
-
-      return res.status(400).json({ message: flatErrors.join(", ") });
+      return sendErrorResponse(res, 400, message, "VALIDATION_ERROR");
     }
 
     if (source === "body") {

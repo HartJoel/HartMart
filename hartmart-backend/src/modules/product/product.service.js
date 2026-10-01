@@ -16,13 +16,13 @@ class ProductService {
     const vendor = await VendorRepository.findUserId(vendorUserId);
 
     if (!vendor) {
-      throw new AppError("Only vendors can create products", 404);
+      throw new AppError("A vendor account is required to create products.", 403);
     }
 
     const category = await CategoryRepository.findBySlug(data.categorySlug);
 
     if (!category) {
-      throw new AppError("Invalid category selected", 404);
+      throw new AppError("The selected product category was not found.", 404);
     }
 
     let imageData = null;
@@ -98,6 +98,9 @@ class ProductService {
 
   static async getProductById(id) {
     const product = await getOrSetCache("products.detail", [id], cacheTtl.productDetail, () => ProductRepository.findbyId(id));
+    if (!product) {
+      throw new AppError("Product not found.", 404);
+    }
     return product;
   }
 
@@ -105,17 +108,17 @@ class ProductService {
     const vendor = await VendorRepository.findUserId(userId);
 
     if (!vendor) {
-      throw new Error("Only vendors can update products");
+      throw new AppError("A vendor account is required to update products.", 403);
     }
 
     const product = await ProductRepository.findbyId(productId);
 
     if (!product) {
-      throw new Error("Product not Found");
+      throw new AppError("Product not found.", 404);
     }
 
     if (product.vendorId !== vendor.id) {
-      throw new Error("You are not allowed to update this product");
+      throw new AppError("You do not have permission to update this product.", 403);
     }
 
     let categoryId = undefined;
@@ -124,7 +127,7 @@ class ProductService {
       const category = await CategoryRepository.findBySlug(data.categorySlug);
 
       if (!category) {
-        throw new Error("Invalid category selected");
+        throw new AppError("The selected product category was not found.", 404);
       }
 
       categoryId = category.id;
@@ -158,13 +161,16 @@ class ProductService {
 
   static async getVendorProduct(userId, query) {
     const vendor = await VendorRepository.findUserId(userId);
+    if (!vendor) {
+      throw new AppError("A vendor account is required to view vendor products.", 403);
+    }
     return ProductRepository.findVendorProducts(vendor.id, query);
   }
 
   static async getLowStockProducts(userId, query) {
     const vendor = await VendorRepository.findUserId(userId);
 
-    if (!vendor) throw new Error("Only vendors allowed");
+    if (!vendor) throw new AppError("A vendor account is required to view low-stock products.", 403);
 
     return ProductRepository.getLowStockProducts(vendor.id, query);
   }
@@ -172,17 +178,17 @@ class ProductService {
   static async updateStock(productId, userId, data) {
     const vendor = await VendorRepository.findUserId(userId);
 
-    if (!vendor) throw new Error("Only vendors allowed");
+    if (!vendor) throw new AppError("A vendor account is required to update stock.", 403);
 
     const product = await ProductRepository.findbyId(productId);
-    if (!product) throw new Error("Product not found");
+    if (!product) throw new AppError("Product not found.", 404);
 
     if (product.vendorId !== vendor.id) {
-      throw new Error("Unauthorized");
+      throw new AppError("You do not have permission to update this product's stock.", 403);
     }
 
     if (data.reservedStock > data.totalStock) {
-      throw new Error("Invalid stock values");
+      throw new AppError("Reserved stock cannot exceed total stock.", 400);
     }
 
     const updatedProduct = await ProductRepository.updateStock(productId, data);
@@ -198,21 +204,21 @@ class ProductService {
     const vendor = await VendorRepository.findUserId(userId);
 
     if (!vendor) {
-      throw new Error("Only vendors can delete products");
+      throw new AppError("A vendor account is required to delete products.", 403);
     }
 
     const product = await ProductRepository.findbyId(productId);
 
     if (!product) {
-      throw new Error("Product not found");
+      throw new AppError("Product not found.", 404);
     }
 
     if (product.vendorId !== vendor.id) {
-      throw new Error("You are not allowed to delete this product");
+      throw new AppError("You do not have permission to delete this product.", 403);
     }
 
     if (product.deletedAt) {
-      throw new Error("Product already deleted");
+      throw new AppError("Product has already been deleted.", 409);
     }
 
     const deleted = await ProductRepository.softDeleteProduct(productId);

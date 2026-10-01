@@ -14,7 +14,7 @@ class VendorService {
 
     if (existingVendor) {
       if (existingVendor) {
-        throw new AppError("You already have a vendor account", 404);
+        throw new AppError("You already have a vendor account.", 409);
       }
     }
 
@@ -23,7 +23,7 @@ class VendorService {
     const existingStore = await VendorRepository.findByStoreSlug(storeSlug);
 
     if (existingStore) {
-      throw new AppError("Store name already exists", 404);
+      throw new AppError("That store name is already in use.", 409);
     }
 
     await UserRepository.upadateRole(userId);
@@ -67,15 +67,20 @@ class VendorService {
   }
 
   static async getVendorProfile(vendorId) {
-    return VendorRepository.findById(vendorId);
+    const vendor = await VendorRepository.findById(vendorId);
+    if (!vendor) throw new AppError("Vendor not found.", 404);
+    return vendor;
   }
 
   static async getMyVendorProfile(userId) {
-    return VendorRepository.findUserId(userId);
+    const vendor = await VendorRepository.findUserId(userId);
+    if (!vendor) throw new AppError("You do not have a vendor account.", 404);
+    return vendor;
   }
 
   static async updateVendorProfile(userId, data) {
     const vendor = await VendorRepository.findUserId(userId);
+    if (!vendor) throw new AppError("You do not have a vendor account.", 404);
     const updatedVendor = await VendorRepository.updateVendor(vendor.id, data);
     EventService.emit(EventTypes.VENDOR_UPDATED, {
       userId,
@@ -130,6 +135,7 @@ class VendorService {
 
   static async getVendorAnalytics(userId) {
     const vendor = await VendorRepository.findUserId(userId);
+    if (!vendor) throw new AppError("You do not have a vendor account.", 404);
 
     // Build analytics later
     return {

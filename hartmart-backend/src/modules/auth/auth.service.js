@@ -89,7 +89,7 @@ class AuthService {
           timestamp: new Date(),
         });
 
-        throw new AppError("Invalid or expired verification token", 404);
+        throw new AppError("The verification token is invalid or has expired.", 400);
       }
 
       const updatedUser = await AuthRepository.verifyEmail(user);
@@ -144,7 +144,7 @@ class AuthService {
           timestamp: new Date(),
         });
 
-        throw new AppError("User doesn't exist", 404);
+        throw new AppError("Invalid email or password", 401);
       }
 
       const isPasswordValid = await bcrypt.compare(
@@ -161,7 +161,7 @@ class AuthService {
           timestamp: new Date(),
         });
 
-        throw new AppError("Invalid email or password", 404);
+        throw new AppError("Invalid email or password", 401);
       }
 
       const accessToken = generateAccessToken(user.id, user.role);
@@ -283,7 +283,7 @@ class AuthService {
           timestamp: new Date(),
         });
 
-        throw new AppError("Invalid or expired reset token", 404);
+        throw new AppError("The password reset token is invalid or has expired.", 400);
       }
 
       const hashedPassword = await bcrypt.hash(newPassword, 10);

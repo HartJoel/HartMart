@@ -6,7 +6,7 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 
   return res.json({
     success: true,
-    message: "Current User info",
+    message: "Your profile was retrieved successfully.",
     data: {
       user: {
         id: user.id,
@@ -42,9 +42,9 @@ const updateProfile = asyncHandler(async (req, res) => {
 const getUserById = asyncHandler(async (req, res) => {
   const user = await UserService.getUserById(req.params.id);
 
-  return res.status(201).json({
+  return res.status(200).json({
     success: true,
-    message: "User Details ",
+    message: "User retrieved successfully.",
     data: user,
   });
 });
@@ -54,7 +54,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
 
   return res.json({
     success: true,
-    message: "All Users",
+    message: "Users retrieved successfully.",
 
     number: users.data.length,
     data: users.data,

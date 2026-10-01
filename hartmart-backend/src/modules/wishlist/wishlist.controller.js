@@ -9,7 +9,7 @@ const addToWishList = asyncHandler(async (req, res) => {
 
   res.status(201).json({
     success: true,
-    message: "Add product to wishlist",
+    message: "Product added to wishlist successfully.",
     data: item,
   });
 });
@@ -17,9 +17,9 @@ const addToWishList = asyncHandler(async (req, res) => {
 const getWishlist = asyncHandler(async (req, res) => {
   const list = await WishlistService.getWishlist(req.user.id);
 
-  res.status(201).json({
+  res.status(200).json({
     success: true,
-    message: "Get user's wishlist",
+    message: "Wishlist retrieved successfully.",
     data: list,
   });
 });

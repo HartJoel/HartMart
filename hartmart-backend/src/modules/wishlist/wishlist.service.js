@@ -8,7 +8,7 @@ class WishlistService {
     const product = await ProductRepository.findbyId(productId);
 
     if (!product) {
-      throw new AppError("Product not Found", 404);
+      throw new AppError("The selected product was not found.", 404);
     }
 
     const existing = await WishlistRepository.findItem(userId, productId);

@@ -21,9 +21,9 @@ const createProduct = asyncHandler(async (req, res) => {
 
 const getAllProducts = asyncHandler(async (req, res) => {
   const products = await ProductService.getAllProducts(req.validatedQuery ?? req.query);
-  return res.status(201).json({
+  return res.status(200).json({
     success: true,
-    message: "Get all Products",
+    message: "Products retrieved successfully.",
     data: products,
     pagination: products.pagination,
   });
@@ -35,9 +35,9 @@ const getVendorProducts = asyncHandler(async (req, res) => {
     req.validatedQuery ?? req.query,
   );
 
-  return res.status(201).json({
-    success: "true",
-    message: "Vendor Products list",
+  return res.status(200).json({
+    success: true,
+    message: "Vendor products retrieved successfully.",
     data: vendorProducts,
   });
 });
@@ -51,9 +51,9 @@ const updateStock = asyncHandler(async (req, res) => {
     req.body,
   );
 
-  return res.status(201).json({
-    success: "true",
-    message: "Updated Stock",
+  return res.status(200).json({
+    success: true,
+    message: "Product stock updated successfully.",
     data: data,
   });
 });
@@ -61,18 +61,18 @@ const updateStock = asyncHandler(async (req, res) => {
 const getLowStock = asyncHandler(async (req, res) => {
   const data = await ProductService.getLowStockProducts(req.user.id, req.validatedQuery ?? req.query);
 
-  return res.status(201).json({
-    success: "true",
-    message: "Low Stocks",
+  return res.status(200).json({
+    success: true,
+    message: "Low-stock products retrieved successfully.",
     data: data,
   });
 });
 
 const getProductById = asyncHandler(async (req, res) => {
   const product = await ProductService.getProductById(req.params.productId);
-  return res.status(201).json({
-    success: "true",
-    message: "Product",
+  return res.status(200).json({
+    success: true,
+    message: "Product retrieved successfully.",
     data: product,
   });
 });

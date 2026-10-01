@@ -77,7 +77,7 @@ class ReviewService {
     }
 
     if (review.userId !== userId) {
-      throw new AppError("Unauthorized", 403);
+      throw new AppError("You do not have permission to edit this review.", 403);
     }
 
     const updatedReview = await ReviewRespository.updateReview(reviewId, {
@@ -97,7 +97,7 @@ class ReviewService {
     }
 
     if (review.userId !== userId) {
-      throw new AppError("Unauthorized", 403);
+      throw new AppError("You do not have permission to delete this review.", 403);
     }
 
     await ReviewRespository.deleteReview(reviewId);

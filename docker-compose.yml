@@ -1,0 +1,51 @@
+services:
+  api:
+    build: .
+    ports:
+      - "${PORT:-5001}:5001"
+    environment:
+      NODE_ENV: production
+      PORT: 5001
+      DATABASE_URL: ${DATABASE_URL:-postgresql://hartmart:hartmart@postgres:5432/hartmart?schema=public}
+      REDIS_URL: redis://redis:6379
+    env_file:
+      - path: .env
+        required: false
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: hartmart
+      POSTGRES_PASSWORD: hartmart
+      POSTGRES_DB: hartmart
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hartmart -d hartmart"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:

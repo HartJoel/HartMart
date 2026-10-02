@@ -5,10 +5,8 @@ import { connectDB, disconnectDB } from "./config/db.js";
 import registerNotificationListeners from "./events/listeners/notificationListeners.js";
 import registerAuditListeners from "./events/listeners/auditListeners.js";
 
-
 registerNotificationListeners();
 registerAuditListeners();
-
 
 // Import Routes
 import authRoutes from "./modules/auth/auth.routes.js";
@@ -40,28 +38,34 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-app.use("/v1/auth", authRoutes);
-app.use("/v1/users", userRoutes);
-app.use("/v1/addresses", addressRoutes);
-app.use("/v1/auth", refreshRoutes);
-app.use("/v1/vendor", vendorRoutes);
-app.use("/v1/category", categoryRoutes);
-app.use("/v1/products", productRoutes);
-app.use("/v1/carts", cartRoutes);
-app.use("/v1/wishlists", wishLists);
-app.use("/v1/orders", orderRoutes);
-app.use("/v1/reviews", reviewRoutes);
-app.use("/v1/notification", notificationRoutes);
-app.use("/v1/admin", adminRoutes);
-app.use("/v1/payment", paymentRoutes);
+app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/addresses", addressRoutes);
+app.use("/api/v1/auth", refreshRoutes);
+app.use("/api/v1/vendor", vendorRoutes);
+app.use("/api/v1/category", categoryRoutes);
+app.use("/api/v1/products", productRoutes);
+app.use("/api/v1/carts", cartRoutes);
+app.use("/api/v1/wishlists", wishLists);
+app.use("/api/v1/orders", orderRoutes);
+app.use("/api/v1/reviews", reviewRoutes);
+app.use("/api/v1/notification", notificationRoutes);
+app.use("/api/v1/admin", adminRoutes);
+app.use("/api/v1/payment", paymentRoutes);
 app.use("/api", healthRoutes);
 
-app.use((req, res) => sendErrorResponse(res, 404, "The requested API route was not found."));
+app.use((req, res) =>
+  sendErrorResponse(res, 404, "The requested API route was not found."),
+);
 app.use(errorMiddleware);
 
 // Handle unhandled promise rejections (e.g., database connection errors)
 process.on("unhandledRejection", (err) => {
-  logger.error("Unhandled promise rejection", { service: "process", errorMessage: err?.message, stack: err?.stack });
+  logger.error("Unhandled promise rejection", {
+    service: "process",
+    errorMessage: err?.message,
+    stack: err?.stack,
+  });
   const shutdown = async () => {
     await disconnectDB();
     process.exit(1);
@@ -72,14 +76,21 @@ process.on("unhandledRejection", (err) => {
 
 // Handle uncaught exceptions
 process.on("uncaughtException", async (err) => {
-  logger.error("Uncaught exception", { service: "process", errorMessage: err.message, stack: err.stack });
+  logger.error("Uncaught exception", {
+    service: "process",
+    errorMessage: err.message,
+    stack: err.stack,
+  });
   await disconnectDB();
   process.exit(1);
 });
 
 // Graceful shutdown
 process.on("SIGTERM", async () => {
-  logger.info("Shutdown signal received", { service: "process", signal: "SIGTERM" });
+  logger.info("Shutdown signal received", {
+    service: "process",
+    signal: "SIGTERM",
+  });
   const shutdown = async () => {
     await disconnectDB();
     process.exit(0);
